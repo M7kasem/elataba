@@ -19,7 +19,6 @@ namespace Elattba.InfraStructure.Repository
         public async Task AddAsync(T entity)
         {   
             await _context.Set<T>().AddAsync(entity);
-            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
@@ -28,7 +27,6 @@ namespace Elattba.InfraStructure.Repository
             if (entity != null)
             {
                 _context.Set<T>().Remove(entity);
-                await _context.SaveChangesAsync();
             }
         }
       
@@ -47,7 +45,7 @@ namespace Elattba.InfraStructure.Repository
 
 
 
-        public async Task<T> GetByIdAsync(int id)
+        public async Task<T?> GetByIdAsync(int id)
         {
             var  entity = await _context.Set<T>().FindAsync(id);
             return entity;
@@ -64,11 +62,10 @@ namespace Elattba.InfraStructure.Repository
             return entity;
         }
 
-        public async Task UpdateAsync(T entity)
+        public Task UpdateAsync(T entity)
         {
             _context.Entry(entity).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
+            return Task.CompletedTask;
         }
 
     }

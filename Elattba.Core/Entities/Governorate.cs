@@ -10,4 +10,5 @@ public class Governorate
     public string Name { get; set; } = string.Empty;
 
     public ICollection<User> Users { get; set; } = new List<User>();
+    public ICollection<ShippingRate> ShippingRates { get; set; } = new List<ShippingRate>();
 }

@@ -16,12 +16,12 @@ namespace Elattba.InfraStructure.Data.Config
             builder.HasOne(op => op.Offer)
              .WithMany(o => o.OfferProducts)
              .HasForeignKey(op => op.OfferId)
-             .OnDelete(DeleteBehavior.Cascade);
+             .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(op => op.Product)
              .WithMany(p => p.OfferProducts)
              .HasForeignKey(op => op.ProductId)
-             .OnDelete(DeleteBehavior.Cascade);
+             .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

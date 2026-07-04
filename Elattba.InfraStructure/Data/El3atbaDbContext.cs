@@ -20,6 +20,8 @@ namespace Elattba.InfraStructure.Data
         public DbSet<PricingTier> PricingTiers => Set<PricingTier>();
         public DbSet<Offer> Offers => Set<Offer>();
         public DbSet<OfferProduct> OfferProducts => Set<OfferProduct>();
+        public DbSet<Carrier> Carriers => Set<Carrier>();
+        public DbSet<ShippingRate> ShippingRates => Set<ShippingRate>();
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Review> Reviews => Set<Review>();

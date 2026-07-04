@@ -21,7 +21,14 @@ namespace Elattba.InfraStructure.Data.Config
              .HasForeignKey(o => o.StoreId)
              .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(o => o.Carrier)
+                .WithMany(c => c.Orders)
+                .HasForeignKey(o => o.CarrierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Property(o => o.TotalAmount).HasPrecision(10, 2);
+            builder.Property(o => o.ShippingCost).HasPrecision(10, 2);
+            builder.Property(o => o.TrackingNumber).HasMaxLength(100);
 
             // Enums stored as readable strings rather than raw ints.
             builder.Property(o => o.PaymentMethod).HasConversion<string>().HasMaxLength(20);
