@@ -1,179 +1,90 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
+using Elattba.Application.Stores;
 using Elattba.Core.DTOs;
-using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class StoreController : BaseController
+public class StoreController : ControllerBase
 {
-    public StoreController(IUnitOfWork unitOfWork) : base(unitOfWork)
+    private readonly IStoreService _storeService;
+
+    public StoreController(IStoreService storeService)
     {
+        _storeService = storeService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var stores = await _unitOfWork.Stores.GetAllAsync(
-                store => store.Owner!,
-                store => store.Manager!,
-                store => store.Category!);
-            var data = stores.Select(store => store.ToDto()).ToList();
-            return Ok(new ResponseAPI(200, "Stores retrieved successfully", data));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _storeService.GetAllAsync();
+        return ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var stores = await _unitOfWork.Stores.GetAllAsync(
-                store => store.Owner!,
-                store => store.Manager!,
-                store => store.Category!);
-            var store = stores.FirstOrDefault(item => item.StoreId == id);
-            if (store == null)
-            {
-                return NotFound(new ResponseAPI(404, "Store not found."));
-            }
-
-            return Ok(new ResponseAPI(200, "Store retrieved successfully", store.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _storeService.GetByIdAsync(id);
+        return ToActionResult(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateStoreDto createStoreDto)
     {
-        try
+        var result = await _storeService.CreateAsync(createStoreDto);
+        if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
         {
-            var owner = await _unitOfWork.Users.GetByIdAsync(createStoreDto.OwnerId);
-            if (owner == null)
-            {
-                return NotFound(new ResponseAPI(404, "Owner not found."));
-            }
-
-            User? manager = null;
-            if (createStoreDto.ManagerId.HasValue)
-            {
-                manager = await _unitOfWork.Users.GetByIdAsync(createStoreDto.ManagerId.Value);
-                if (manager == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Manager not found."));
-                }
-            }
-
-            var category = await _unitOfWork.Categories.GetByIdAsync(createStoreDto.CategoryId);
-            if (category == null)
-            {
-                return NotFound(new ResponseAPI(404, "Category not found."));
-            }
-
-            var store = new Store
-            {
-                OwnerId = createStoreDto.OwnerId,
-                ManagerId = createStoreDto.ManagerId,
-                CategoryId = createStoreDto.CategoryId,
-                StoreName = createStoreDto.StoreName,
-                Location = createStoreDto.Location,
-                Description = createStoreDto.Description
-            };
-
-            await _unitOfWork.Stores.AddAsync(store);
-            await _unitOfWork.CompleteAsync();
-
-            store.Owner = owner;
-            store.Manager = manager;
-            store.Category = category;
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = store.StoreId },
-                new ResponseAPI(201, "Store created successfully", store.ToDto()));
+                new { id = result.Data.StoreId },
+                new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+
+        return ToActionResult(result);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateStoreDto updateStoreDto)
     {
-        try
-        {
-            var store = await _unitOfWork.Stores.GetByIdAsync(id);
-            if (store == null)
-            {
-                return NotFound(new ResponseAPI(404, "Store not found."));
-            }
-
-            User? manager = null;
-            if (updateStoreDto.ManagerId.HasValue)
-            {
-                manager = await _unitOfWork.Users.GetByIdAsync(updateStoreDto.ManagerId.Value);
-                if (manager == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Manager not found."));
-                }
-            }
-
-            var category = await _unitOfWork.Categories.GetByIdAsync(updateStoreDto.CategoryId);
-            if (category == null)
-            {
-                return NotFound(new ResponseAPI(404, "Category not found."));
-            }
-
-            store.ManagerId = updateStoreDto.ManagerId;
-            store.CategoryId = updateStoreDto.CategoryId;
-            store.StoreName = updateStoreDto.StoreName;
-            store.Location = updateStoreDto.Location;
-            store.Description = updateStoreDto.Description;
-
-            await _unitOfWork.Stores.UpdateAsync(store);
-            await _unitOfWork.CompleteAsync();
-
-            store.Manager = manager;
-            store.Category = category;
-            return Ok(new ResponseAPI(200, "Store updated successfully", store.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _storeService.UpdateAsync(id, updateStoreDto);
+        return ToActionResult(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var store = await _unitOfWork.Stores.GetByIdAsync(id);
-            if (store == null)
-            {
-                return NotFound(new ResponseAPI(404, "Store not found."));
-            }
+        var result = await _storeService.DeleteAsync(id);
+        return ToActionResult(result);
+    }
 
-            await _unitOfWork.Stores.DeleteAsync(id);
-            await _unitOfWork.CompleteAsync();
+    private IActionResult ToActionResult<T>(ServiceResult<T> result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message, result.Data);
 
-            return Ok(new ResponseAPI(200, "Store deleted successfully"));
-        }
-        catch (Exception ex)
+        return result.StatusCode switch
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+            200 => Ok(response),
+            400 => BadRequest(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
+    }
+
+    private IActionResult ToActionResult(ServiceResult result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message);
+
+        return result.StatusCode switch
+        {
+            200 => Ok(response),
+            400 => BadRequest(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
     }
 }

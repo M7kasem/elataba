@@ -22,6 +22,7 @@ namespace Elattba.InfraStructure
                 op.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
 
+
             return services;
         }
     }

@@ -1,5 +1,6 @@
 using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +24,9 @@ public class CarrierController : BaseController
             var data = carriers.Select(carrier => carrier.ToDto()).ToList();
             return Ok(new ResponseAPI(200, "Carriers retrieved successfully", data));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -42,9 +43,9 @@ public class CarrierController : BaseController
 
             return Ok(new ResponseAPI(200, "Carrier retrieved successfully", carrier.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -67,9 +68,9 @@ public class CarrierController : BaseController
                 new { id = carrier.CarrierId },
                 new ResponseAPI(201, "Carrier created successfully", carrier.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -92,9 +93,9 @@ public class CarrierController : BaseController
 
             return Ok(new ResponseAPI(200, "Carrier updated successfully", carrier.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -114,9 +115,9 @@ public class CarrierController : BaseController
 
             return Ok(new ResponseAPI(200, "Carrier deleted successfully"));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 }

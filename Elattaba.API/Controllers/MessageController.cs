@@ -1,155 +1,90 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
+using Elattba.Application.Messages;
 using Elattba.Core.DTOs;
-using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class MessageController : BaseController
+public class MessageController : ControllerBase
 {
-    public MessageController(IUnitOfWork unitOfWork) : base(unitOfWork)
+    private readonly IMessageService _messageService;
+
+    public MessageController(IMessageService messageService)
     {
+        _messageService = messageService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var messages = await _unitOfWork.Messages.GetAllAsync(
-                message => message.Sender!,
-                message => message.Recipient!,
-                message => message.Product!);
-            var data = messages.Select(message => message.ToDto()).ToList();
-            return Ok(new ResponseAPI(200, "Messages retrieved successfully", data));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _messageService.GetAllAsync();
+        return ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var messages = await _unitOfWork.Messages.GetAllAsync(
-                message => message.Sender!,
-                message => message.Recipient!,
-                message => message.Product!);
-            var message = messages.FirstOrDefault(item => item.MessageId == id);
-            if (message == null)
-            {
-                return NotFound(new ResponseAPI(404, "Message not found."));
-            }
-
-            return Ok(new ResponseAPI(200, "Message retrieved successfully", message.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _messageService.GetByIdAsync(id);
+        return ToActionResult(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateMessageDto createMessageDto)
     {
-        try
+        var result = await _messageService.CreateAsync(createMessageDto);
+        if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
         {
-            var sender = await _unitOfWork.Users.GetByIdAsync(createMessageDto.SenderId);
-            if (sender == null)
-            {
-                return NotFound(new ResponseAPI(404, "Sender not found."));
-            }
-
-            var recipient = await _unitOfWork.Users.GetByIdAsync(createMessageDto.RecipientId);
-            if (recipient == null)
-            {
-                return NotFound(new ResponseAPI(404, "Recipient not found."));
-            }
-
-            Product? product = null;
-            if (createMessageDto.ProductId.HasValue)
-            {
-                product = await _unitOfWork.Products.GetByIdAsync(createMessageDto.ProductId.Value);
-                if (product == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Product not found."));
-                }
-            }
-
-            var message = new Message
-            {
-                SenderId = createMessageDto.SenderId,
-                RecipientId = createMessageDto.RecipientId,
-                ProductId = createMessageDto.ProductId,
-                MessageText = createMessageDto.MessageText
-            };
-
-            await _unitOfWork.Messages.AddAsync(message);
-            await _unitOfWork.CompleteAsync();
-
-            message.Sender = sender;
-            message.Recipient = recipient;
-            message.Product = product;
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = message.MessageId },
-                new ResponseAPI(201, "Message created successfully", message.ToDto()));
+                new { id = result.Data.MessageId },
+                new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+
+        return ToActionResult(result);
     }
 
     [HttpPatch("{id}/read")]
     public async Task<IActionResult> MarkAsRead(int id, [FromBody] MarkMessageAsReadDto markMessageAsReadDto)
     {
-        try
-        {
-            var message = await _unitOfWork.Messages.GetByIdAsync(id);
-            if (message == null)
-            {
-                return NotFound(new ResponseAPI(404, "Message not found."));
-            }
-
-            message.IsRead = markMessageAsReadDto.IsRead;
-
-            await _unitOfWork.Messages.UpdateAsync(message);
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new ResponseAPI(200, "Message read state updated successfully", message.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _messageService.MarkAsReadAsync(id, markMessageAsReadDto);
+        return ToActionResult(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var message = await _unitOfWork.Messages.GetByIdAsync(id);
-            if (message == null)
-            {
-                return NotFound(new ResponseAPI(404, "Message not found."));
-            }
+        var result = await _messageService.DeleteAsync(id);
+        return ToActionResult(result);
+    }
 
-            await _unitOfWork.Messages.DeleteAsync(id);
-            await _unitOfWork.CompleteAsync();
+    private IActionResult ToActionResult<T>(ServiceResult<T> result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message, result.Data);
 
-            return Ok(new ResponseAPI(200, "Message deleted successfully"));
-        }
-        catch (Exception ex)
+        return result.StatusCode switch
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+            200 => Ok(response),
+            400 => BadRequest(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
+    }
+
+    private IActionResult ToActionResult(ServiceResult result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message);
+
+        return result.StatusCode switch
+        {
+            200 => Ok(response),
+            400 => BadRequest(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
     }
 }

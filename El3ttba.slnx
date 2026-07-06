@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/source/">
     <Project Path="Elattaba.API/Elattaba.API.csproj" />
+    <Project Path="Elattba.Application/Elattba.Application.csproj" />
     <Project Path="Elattba.Core/Elattba.Core.csproj" />
     <Project Path="Elattba.InfraStructure/Elattba.InfraStructure.csproj" />
   </Folder>

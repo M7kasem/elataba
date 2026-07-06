@@ -1,150 +1,90 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
+using Elattba.Application.Reviews;
 using Elattba.Core.DTOs;
-using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ReviewController : BaseController
+public class ReviewController : ControllerBase
 {
-    public ReviewController(IUnitOfWork unitOfWork) : base(unitOfWork)
+    private readonly IReviewService _reviewService;
+
+    public ReviewController(IReviewService reviewService)
     {
+        _reviewService = reviewService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var reviews = await _unitOfWork.Reviews.GetAllAsync(
-                review => review.Store!,
-                review => review.Buyer!);
-            var data = reviews.Select(review => review.ToDto()).ToList();
-            return Ok(new ResponseAPI(200, "Reviews retrieved successfully", data));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _reviewService.GetAllAsync();
+        return ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var reviews = await _unitOfWork.Reviews.GetAllAsync(
-                review => review.Store!,
-                review => review.Buyer!);
-            var review = reviews.FirstOrDefault(item => item.ReviewId == id);
-            if (review == null)
-            {
-                return NotFound(new ResponseAPI(404, "Review not found."));
-            }
-
-            return Ok(new ResponseAPI(200, "Review retrieved successfully", review.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _reviewService.GetByIdAsync(id);
+        return ToActionResult(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateReviewDto createReviewDto)
     {
-        try
+        var result = await _reviewService.CreateAsync(createReviewDto);
+        if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
         {
-            var order = await _unitOfWork.Orders.GetByIdAsync(createReviewDto.OrderId);
-            if (order == null)
-            {
-                return NotFound(new ResponseAPI(404, "Order not found."));
-            }
-
-            var store = await _unitOfWork.Stores.GetByIdAsync(createReviewDto.StoreId);
-            if (store == null)
-            {
-                return NotFound(new ResponseAPI(404, "Store not found."));
-            }
-
-            var buyer = await _unitOfWork.Users.GetByIdAsync(createReviewDto.BuyerId);
-            if (buyer == null)
-            {
-                return NotFound(new ResponseAPI(404, "Buyer not found."));
-            }
-
-            var review = new Review
-            {
-                OrderId = createReviewDto.OrderId,
-                StoreId = createReviewDto.StoreId,
-                BuyerId = createReviewDto.BuyerId,
-                Rating = createReviewDto.Rating,
-                Comment = createReviewDto.Comment
-            };
-
-            await _unitOfWork.Reviews.AddAsync(review);
-            await _unitOfWork.CompleteAsync();
-
-            review.Store = store;
-            review.Buyer = buyer;
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = review.ReviewId },
-                new ResponseAPI(201, "Review created successfully", review.ToDto()));
+                new { id = result.Data.ReviewId },
+                new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+
+        return ToActionResult(result);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateReviewDto updateReviewDto)
     {
-        try
-        {
-            var review = await _unitOfWork.Reviews.GetByIdAsync(id);
-            if (review == null)
-            {
-                return NotFound(new ResponseAPI(404, "Review not found."));
-            }
-
-            review.Rating = updateReviewDto.Rating;
-            review.Comment = updateReviewDto.Comment;
-
-            await _unitOfWork.Reviews.UpdateAsync(review);
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new ResponseAPI(200, "Review updated successfully", review.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _reviewService.UpdateAsync(id, updateReviewDto);
+        return ToActionResult(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var review = await _unitOfWork.Reviews.GetByIdAsync(id);
-            if (review == null)
-            {
-                return NotFound(new ResponseAPI(404, "Review not found."));
-            }
+        var result = await _reviewService.DeleteAsync(id);
+        return ToActionResult(result);
+    }
 
-            await _unitOfWork.Reviews.DeleteAsync(id);
-            await _unitOfWork.CompleteAsync();
+    private IActionResult ToActionResult<T>(ServiceResult<T> result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message, result.Data);
 
-            return Ok(new ResponseAPI(200, "Review deleted successfully"));
-        }
-        catch (Exception ex)
+        return result.StatusCode switch
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+            200 => Ok(response),
+            400 => BadRequest(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
+    }
+
+    private IActionResult ToActionResult(ServiceResult result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message);
+
+        return result.StatusCode switch
+        {
+            200 => Ok(response),
+            400 => BadRequest(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
     }
 }

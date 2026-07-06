@@ -18,6 +18,7 @@ namespace Elattba.InfraStructure.Data.Config
                     .HasForeignKey(p => p.StoreId)
                     .OnDelete(DeleteBehavior.Cascade);
             builder.Property(p => p.BasePrice).HasPrecision(10, 2);
+            builder.Property(p => p.RowVersion).IsRowVersion();
 
         }
     }
