@@ -17,6 +17,11 @@ namespace Elattba.InfraStructure.Data.Config
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(o => o.DiscountPercentage).HasPrecision(5, 2);
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Offers_DiscountPercentage_Range", "[DiscountPercentage] > 0 AND [DiscountPercentage] <= 100");
+                table.HasCheckConstraint("CK_Offers_Date_Range", "[StartDate] < [EndDate]");
+            });
         }
     }
 }

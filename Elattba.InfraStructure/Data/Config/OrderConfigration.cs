@@ -34,6 +34,11 @@ namespace Elattba.InfraStructure.Data.Config
             builder.Property(o => o.PaymentMethod).HasConversion<string>().HasMaxLength(20);
             builder.Property(o => o.PaymentStatus).HasConversion<string>().HasMaxLength(20);
             builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Orders_TotalAmount_NonNegative", "[TotalAmount] >= 0");
+                table.HasCheckConstraint("CK_Orders_ShippingCost_NonNegative", "[ShippingCost] >= 0");
+            });
         }
     }
 }

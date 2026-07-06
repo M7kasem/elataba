@@ -19,6 +19,11 @@ namespace Elattba.InfraStructure.Data.Config
              .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(t => t.PricePerUnit).HasPrecision(10, 2);
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_PricingTiers_MinQuantity_Positive", "[MinQuantity] > 0");
+                table.HasCheckConstraint("CK_PricingTiers_PricePerUnit_Positive", "[PricePerUnit] > 0");
+            });
         }
     }
 }
