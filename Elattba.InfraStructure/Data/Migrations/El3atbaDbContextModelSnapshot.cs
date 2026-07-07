@@ -173,7 +173,12 @@ namespace Elattba.InfraStructure.Data.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Offers");
+                    b.ToTable("Offers", t =>
+                        {
+                            t.HasCheckConstraint("CK_Offers_Date_Range", "[StartDate] < [EndDate]");
+
+                            t.HasCheckConstraint("CK_Offers_DiscountPercentage_Range", "[DiscountPercentage] > 0 AND [DiscountPercentage] <= 100");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.OfferProduct", b =>
@@ -253,7 +258,12 @@ namespace Elattba.InfraStructure.Data.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", t =>
+                        {
+                            t.HasCheckConstraint("CK_Orders_ShippingCost_NonNegative", "[ShippingCost] >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_TotalAmount_NonNegative", "[TotalAmount] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.OrderItem", b =>
@@ -287,7 +297,14 @@ namespace Elattba.InfraStructure.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_OrderItems_Quantity_Positive", "[Quantity] > 0");
+
+                            t.HasCheckConstraint("CK_OrderItems_Subtotal_NonNegative", "[Subtotal] >= 0");
+
+                            t.HasCheckConstraint("CK_OrderItems_UnitPrice_Positive", "[UnitPrice] > 0");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.PricingTier", b =>
@@ -312,7 +329,12 @@ namespace Elattba.InfraStructure.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("PricingTiers");
+                    b.ToTable("PricingTiers", t =>
+                        {
+                            t.HasCheckConstraint("CK_PricingTiers_MinQuantity_Positive", "[MinQuantity] > 0");
+
+                            t.HasCheckConstraint("CK_PricingTiers_PricePerUnit_Positive", "[PricePerUnit] > 0");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.Product", b =>
@@ -344,6 +366,12 @@ namespace Elattba.InfraStructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("StockQuantity")
                         .HasColumnType("int");
 
@@ -356,7 +384,12 @@ namespace Elattba.InfraStructure.Data.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", t =>
+                        {
+                            t.HasCheckConstraint("CK_Products_BasePrice_Positive", "[BasePrice] > 0");
+
+                            t.HasCheckConstraint("CK_Products_StockQuantity_NonNegative", "[StockQuantity] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.ProductImage", b =>
@@ -426,7 +459,10 @@ namespace Elattba.InfraStructure.Data.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", t =>
+                        {
+                            t.HasCheckConstraint("CK_Reviews_Rating_Range", "[Rating] BETWEEN 1 AND 5");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.ShippingRate", b =>
@@ -454,7 +490,10 @@ namespace Elattba.InfraStructure.Data.Migrations
                     b.HasIndex("CarrierId", "GovernorateId")
                         .IsUnique();
 
-                    b.ToTable("ShippingRates");
+                    b.ToTable("ShippingRates", t =>
+                        {
+                            t.HasCheckConstraint("CK_ShippingRates_Cost_NonNegative", "[Cost] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.Store", b =>
@@ -502,7 +541,10 @@ namespace Elattba.InfraStructure.Data.Migrations
                     b.HasIndex("OwnerId")
                         .IsUnique();
 
-                    b.ToTable("Stores");
+                    b.ToTable("Stores", t =>
+                        {
+                            t.HasCheckConstraint("CK_Stores_Rating_Range", "[Rating] >= 0 AND [Rating] <= 5");
+                        });
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.User", b =>

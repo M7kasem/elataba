@@ -20,6 +20,10 @@ namespace Elattba.InfraStructure.Data.Config
 
             builder.Property(sr => sr.Cost).HasPrecision(10, 2);
             builder.HasIndex(sr => new { sr.CarrierId, sr.GovernorateId }).IsUnique();
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_ShippingRates_Cost_NonNegative", "[Cost] >= 0");
+            });
         }
     }
 }

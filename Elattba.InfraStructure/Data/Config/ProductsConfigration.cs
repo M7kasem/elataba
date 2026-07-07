@@ -18,6 +18,12 @@ namespace Elattba.InfraStructure.Data.Config
                     .HasForeignKey(p => p.StoreId)
                     .OnDelete(DeleteBehavior.Cascade);
             builder.Property(p => p.BasePrice).HasPrecision(10, 2);
+            builder.Property(p => p.RowVersion).IsRowVersion();
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Products_BasePrice_Positive", "[BasePrice] > 0");
+                table.HasCheckConstraint("CK_Products_StockQuantity_NonNegative", "[StockQuantity] >= 0");
+            });
 
         }
     }

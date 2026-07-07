@@ -1,190 +1,88 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
+using Elattba.Application.Orders;
 using Elattba.Core.DTOs;
-using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrderController : BaseController
+public class OrderController : ControllerBase
 {
-    public OrderController(IUnitOfWork unitOfWork) : base(unitOfWork)
+    private readonly IOrderService _orderService;
+
+    public OrderController(IOrderService orderService)
     {
+        _orderService = orderService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var orders = await _unitOfWork.Orders.GetAllAsync(
-                order => order.Buyer!,
-                order => order.Store!,
-                order => order.Carrier!,
-                order => order.OrderItems);
-            var data = orders.Select(order => order.ToDto()).ToList();
-            return Ok(new ResponseAPI(200, "Orders retrieved successfully", data));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _orderService.GetAllAsync();
+        return ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var orders = await _unitOfWork.Orders.GetAllAsync(
-                order => order.Buyer!,
-                order => order.Store!,
-                order => order.Carrier!,
-                order => order.OrderItems);
-            var order = orders.FirstOrDefault(item => item.OrderId == id);
-            if (order == null)
-            {
-                return NotFound(new ResponseAPI(404, "Order not found."));
-            }
-
-            return Ok(new ResponseAPI(200, "Order retrieved successfully", order.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _orderService.GetByIdAsync(id);
+        return ToActionResult(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateOrderDto createOrderDto)
     {
-        try
+        var result = await _orderService.CreateAsync(createOrderDto);
+        if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
         {
-            var buyer = await _unitOfWork.Users.GetByIdAsync(createOrderDto.BuyerId);
-            if (buyer == null)
-            {
-                return NotFound(new ResponseAPI(404, "Buyer not found."));
-            }
-
-            var store = await _unitOfWork.Stores.GetByIdAsync(createOrderDto.StoreId);
-            if (store == null)
-            {
-                return NotFound(new ResponseAPI(404, "Store not found."));
-            }
-
-            Carrier? carrier = null;
-            if (createOrderDto.CarrierId.HasValue)
-            {
-                carrier = await _unitOfWork.Carriers.GetByIdAsync(createOrderDto.CarrierId.Value);
-                if (carrier == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Carrier not found."));
-                }
-            }
-
-            var order = new Order
-            {
-                BuyerId = createOrderDto.BuyerId,
-                StoreId = createOrderDto.StoreId,
-                CarrierId = createOrderDto.CarrierId,
-                ShippingAddressSnapshot = createOrderDto.ShippingAddressSnapshot,
-                PaymentMethod = createOrderDto.PaymentMethod
-            };
-
-            foreach (var itemDto in createOrderDto.OrderItems)
-            {
-                var product = await _unitOfWork.Products.GetByIdAsync(itemDto.ProductId);
-                if (product == null)
-                {
-                    return NotFound(new ResponseAPI(404, $"Product {itemDto.ProductId} not found."));
-                }
-
-                var subtotal = product.BasePrice * itemDto.Quantity;
-                order.OrderItems.Add(new OrderItem
-                {
-                    ProductId = itemDto.ProductId,
-                    Quantity = itemDto.Quantity,
-                    UnitPrice = product.BasePrice,
-                    Subtotal = subtotal
-                });
-                order.TotalAmount += subtotal;
-            }
-
-            await _unitOfWork.Orders.AddAsync(order);
-            await _unitOfWork.CompleteAsync();
-
-            order.Buyer = buyer;
-            order.Store = store;
-            order.Carrier = carrier;
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = order.OrderId },
-                new ResponseAPI(201, "Order created successfully", order.ToDto()));
+                new { id = result.Data.OrderId },
+                new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+
+        return ToActionResult(result);
     }
 
     [HttpPut("{id}/status")]
     public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto updateOrderStatusDto)
     {
-        try
-        {
-            var order = await _unitOfWork.Orders.GetByIdAsync(id);
-            if (order == null)
-            {
-                return NotFound(new ResponseAPI(404, "Order not found."));
-            }
-
-            if (updateOrderStatusDto.CarrierId.HasValue)
-            {
-                var carrier = await _unitOfWork.Carriers.GetByIdAsync(updateOrderStatusDto.CarrierId.Value);
-                if (carrier == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Carrier not found."));
-                }
-            }
-
-            order.CarrierId = updateOrderStatusDto.CarrierId;
-            order.ShippingCost = updateOrderStatusDto.ShippingCost;
-            order.TrackingNumber = updateOrderStatusDto.TrackingNumber;
-            order.PaymentStatus = updateOrderStatusDto.PaymentStatus;
-            order.Status = updateOrderStatusDto.Status;
-
-            await _unitOfWork.Orders.UpdateAsync(order);
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new ResponseAPI(200, "Order status updated successfully", order.ToDto()));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+        var result = await _orderService.UpdateStatusAsync(id, updateOrderStatusDto);
+        return ToActionResult(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var order = await _unitOfWork.Orders.GetByIdAsync(id);
-            if (order == null)
-            {
-                return NotFound(new ResponseAPI(404, "Order not found."));
-            }
+        var result = await _orderService.DeleteAsync(id);
+        return ToActionResult(result);
+    }
 
-            await _unitOfWork.Orders.DeleteAsync(id);
-            await _unitOfWork.CompleteAsync();
+    private IActionResult ToActionResult<T>(ServiceResult<T> result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message, result.Data);
 
-            return Ok(new ResponseAPI(200, "Order deleted successfully"));
-        }
-        catch (Exception ex)
+        return result.StatusCode switch
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
-        }
+            200 => Ok(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
+    }
+
+    private IActionResult ToActionResult(ServiceResult result)
+    {
+        var response = new ResponseAPI(result.StatusCode, result.Message);
+
+        return result.StatusCode switch
+        {
+            200 => Ok(response),
+            404 => NotFound(response),
+            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
+            _ => StatusCode(result.StatusCode, response)
+        };
     }
 }

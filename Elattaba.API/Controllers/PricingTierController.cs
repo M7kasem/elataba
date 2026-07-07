@@ -1,5 +1,6 @@
 using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +24,9 @@ public class PricingTierController : BaseController
             var data = tiers.Select(tier => tier.ToDto()).ToList();
             return Ok(new ResponseAPI(200, "Pricing tiers retrieved successfully", data));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -42,9 +43,9 @@ public class PricingTierController : BaseController
 
             return Ok(new ResponseAPI(200, "Pricing tier retrieved successfully", tier.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -74,9 +75,9 @@ public class PricingTierController : BaseController
                 new { id = tier.TierId },
                 new ResponseAPI(201, "Pricing tier created successfully", tier.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -99,9 +100,9 @@ public class PricingTierController : BaseController
 
             return Ok(new ResponseAPI(200, "Pricing tier updated successfully", tier.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -121,9 +122,9 @@ public class PricingTierController : BaseController
 
             return Ok(new ResponseAPI(200, "Pricing tier deleted successfully"));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 }

@@ -19,6 +19,8 @@ public class Product
 
     public bool HasOffer { get; set; }
 
+    public byte[] RowVersion { get; set; } = [];
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 

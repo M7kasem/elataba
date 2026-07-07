@@ -1,5 +1,6 @@
 using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +24,9 @@ namespace Elattaba.API.Controllers
                 var data = categories.Select(category => category.ToDto()).ToList();
                 return Ok(new ResponseAPI(200, "Categories retrieved successfully", data));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
             }
         }
 
@@ -42,9 +43,9 @@ namespace Elattaba.API.Controllers
 
                 return Ok(new ResponseAPI(200, "Category retrieved successfully", category.ToDto()));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
             }
         }
 
@@ -67,9 +68,9 @@ namespace Elattaba.API.Controllers
                     new { id = category.CategoryId },
                     new ResponseAPI(201, "Category created successfully", category.ToDto()));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
             }
             
         }
@@ -92,9 +93,9 @@ namespace Elattaba.API.Controllers
 
                 return NoContent();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
             }
         }
         [HttpDelete("{id}")]
@@ -113,9 +114,9 @@ namespace Elattaba.API.Controllers
 
                 return NoContent();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
             }
         }
     }

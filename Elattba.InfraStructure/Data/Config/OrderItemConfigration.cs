@@ -23,6 +23,12 @@ namespace Elattba.InfraStructure.Data.Config
 
             builder.Property(oi => oi.UnitPrice).HasPrecision(10, 2);
             builder.Property(oi => oi.Subtotal).HasPrecision(10, 2);
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_OrderItems_Quantity_Positive", "[Quantity] > 0");
+                table.HasCheckConstraint("CK_OrderItems_UnitPrice_Positive", "[UnitPrice] > 0");
+                table.HasCheckConstraint("CK_OrderItems_Subtotal_NonNegative", "[Subtotal] >= 0");
+            });
         }
     }
 }

@@ -1,5 +1,6 @@
 using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
@@ -23,9 +24,9 @@ public class GovernorateController : BaseController
             var data = governorates.Select(governorate => governorate.ToDto()).ToList();
             return Ok(new ResponseAPI(200, "Governorates retrieved successfully", data));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -42,9 +43,9 @@ public class GovernorateController : BaseController
 
             return Ok(new ResponseAPI(200, "Governorate retrieved successfully", governorate.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -66,9 +67,9 @@ public class GovernorateController : BaseController
                 new { id = governorate.GovernorateId },
                 new ResponseAPI(201, "Governorate created successfully", governorate.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -90,9 +91,9 @@ public class GovernorateController : BaseController
 
             return Ok(new ResponseAPI(200, "Governorate updated successfully", governorate.ToDto()));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 
@@ -112,9 +113,9 @@ public class GovernorateController : BaseController
 
             return Ok(new ResponseAPI(200, "Governorate deleted successfully"));
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return BadRequest(new ResponseAPI(500, $"An error occurred: {ex.Message}"));
+            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
         }
     }
 }

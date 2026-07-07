@@ -18,11 +18,11 @@
             return statusCode switch
             {
                 200 => "Success",
-                400 => "A bad request, you have made", // خطأ في البيانات اللي العميل باعتها
-                401 => "Authorized, you are not",      // العميل مش مسجل دخول
-                404 => "Resource found, it was not",   // الحاجة مش موجودة في الداتا بيز
-                500 => "Server error occurred",        // خطأ من السيرفر نفسه
-                _ => null                              // أي كود تاني مش هيرجع رسالة
+                400 => "Bad request",
+                401 => "Unauthorized",
+                404 => "Resource not found",
+                500 => "Server error occurred",
+                _ => null
             };
         }
     }

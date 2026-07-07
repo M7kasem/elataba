@@ -30,18 +30,37 @@ namespace Elattba.InfraStructure.Repository
             }
         }
       
-        public async Task<IReadOnlyList<T>> GetAllAsync() => await _context.Set<T>().AsNoTracking().ToListAsync();
+        public async Task<IReadOnlyList<T>> GetAllAsync() => await ListAsync();
 
 
-        public async Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
+        public async Task<IReadOnlyList<T>> GetAllAsync(params Expression<Func<T, object>>[] includes) =>
+            await ListAsync(null, true, includes);
+
+        public async Task<T?> GetFirstOrDefaultAsync(
+            Expression<Func<T, bool>> predicate,
+            bool disableTracking = true,
+            params Expression<Func<T, object>>[] includes)
         {
-            var query = _context.Set<T>().AsQueryable();
-            foreach (var item in includes)
+            return await BuildQuery(disableTracking, includes).FirstOrDefaultAsync(predicate);
+        }
+
+        public async Task<IReadOnlyList<T>> ListAsync(
+            Expression<Func<T, bool>>? predicate = null,
+            bool disableTracking = true,
+            params Expression<Func<T, object>>[] includes)
+        {
+            var query = BuildQuery(disableTracking, includes);
+
+            if (predicate != null)
             {
-                query = query.Include(item);
+                query = query.Where(predicate);
             }
+
             return await query.ToListAsync();
         }
+
+        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate) =>
+            await _context.Set<T>().AnyAsync(predicate);
 
 
 
@@ -66,6 +85,23 @@ namespace Elattba.InfraStructure.Repository
         {
             _context.Entry(entity).State = EntityState.Modified;
             return Task.CompletedTask;
+        }
+
+        private IQueryable<T> BuildQuery(bool disableTracking, params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            if (disableTracking)
+            {
+                query = query.AsNoTracking();
+            }
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+
+            return query;
         }
 
     }

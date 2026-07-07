@@ -27,6 +27,11 @@ namespace Elattba.InfraStructure.Data.Config
              .WithMany(u => u.Reviews)
              .HasForeignKey(r => r.BuyerId)
              .OnDelete(DeleteBehavior.Restrict);
+
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Reviews_Rating_Range", "[Rating] BETWEEN 1 AND 5");
+            });
         }
     }
 }

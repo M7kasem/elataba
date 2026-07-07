@@ -26,6 +26,10 @@ namespace Elattba.InfraStructure.Data.Config
                  .OnDelete(DeleteBehavior.Restrict);
             builder.Property(s => s.Rating).HasPrecision(3, 2); // 0.00 - 5.00
             builder.HasIndex(s => s.OwnerId).IsUnique();
+            builder.ToTable(table =>
+            {
+                table.HasCheckConstraint("CK_Stores_Rating_Range", "[Rating] >= 0 AND [Rating] <= 5");
+            });
         }
     }
 }
