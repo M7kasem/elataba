@@ -4,5 +4,6 @@
     <Project Path="Elattba.Application/Elattba.Application.csproj" />
     <Project Path="Elattba.Core/Elattba.Core.csproj" />
     <Project Path="Elattba.InfraStructure/Elattba.InfraStructure.csproj" />
+    <Project Path="Elattba.Tests/Elattba.Tests.csproj" />
   </Folder>
 </Solution>
