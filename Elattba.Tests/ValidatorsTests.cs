@@ -20,6 +20,21 @@ public sealed class ValidatorsTests
         Assert.Contains(result.Errors, error => error.PropertyName == "OrderItems");
     }
 
+    [Fact]
+    public void CreateCheckoutValidator_rejects_empty_items_and_bad_ids()
+    {
+        var validator = new CreateCheckoutDtoValidator();
+        var dto = new CreateCheckoutDto(0, -1, "", PaymentMethod.Cash, []);
+
+        var result = validator.Validate(dto);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, error => error.PropertyName == "BuyerId");
+        Assert.Contains(result.Errors, error => error.PropertyName == "CarrierId");
+        Assert.Contains(result.Errors, error => error.PropertyName == "ShippingAddressSnapshot");
+        Assert.Contains(result.Errors, error => error.PropertyName == "Items");
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(6)]

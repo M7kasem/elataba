@@ -6,6 +6,7 @@ using Elattaba.API.Validation;
 using Elattba.Application.Auth;
 using Elattba.Application.Carriers;
 using Elattba.Application.Categories;
+using Elattba.Application.Checkouts;
 using Elattba.Application.Governorates;
 using Elattba.Application.Messages;
 using Elattba.Application.Offers;
@@ -65,6 +66,7 @@ namespace Elattaba.API.Extensions
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddScoped<ICarrierService, CarrierService>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<ICheckoutService, CheckoutService>();
             services.AddScoped<IGovernorateService, GovernorateService>();
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<IOrderService, OrderService>();
@@ -86,6 +88,7 @@ namespace Elattaba.API.Extensions
             services.AddScoped<IValidator<ProductController.UpdateProductFormDto>, UpdateProductFormDtoValidator>();
             services.AddScoped<IValidator<ProductImageController.UploadProductImageFormDto>, UploadProductImageFormDtoValidator>();
             services.AddScoped<IValidator<ProductImageController.UploadManyProductImagesFormDto>, UploadManyProductImagesFormDtoValidator>();
+            services.AddApiCors(configuration);
             services.AddApiRateLimiting();
 
             return services;

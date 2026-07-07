@@ -6,7 +6,7 @@ namespace Elattba.Application.Products;
 
 public interface IProductService
 {
-    Task<ServiceResult<IReadOnlyList<ProductDto>>> GetAllAsync();
+    Task<ServiceResult<Pagination<ProductDto>>> GetAllAsync(ProductParams productParams);
     Task<ServiceResult<ProductDto>> GetByIdAsync(int id);
     Task<ServiceResult<ProductDto>> CreateAsync(CreateProductCommand command);
     Task<ServiceResult<ProductDto>> CreateWithOfferAsync(CreateProductWithOfferCommand command);

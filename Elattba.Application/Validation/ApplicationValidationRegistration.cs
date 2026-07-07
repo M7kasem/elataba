@@ -13,6 +13,8 @@ public static class ApplicationValidationRegistration
         services.AddScoped<IValidator<UpdateOrderStatusDto>, UpdateOrderStatusDtoValidator>();
         services.AddScoped<IValidator<CreateOrderItemDto>, CreateOrderItemDtoValidator>();
         services.AddScoped<IValidator<UpdateOrderItemDto>, UpdateOrderItemDtoValidator>();
+        services.AddScoped<IValidator<CreateCheckoutDto>, CreateCheckoutDtoValidator>();
+        services.AddScoped<IValidator<CreateCheckoutItemDto>, CreateCheckoutItemDtoValidator>();
 
         services.AddScoped<IValidator<CreateOfferDto>, CreateOfferDtoValidator>();
         services.AddScoped<IValidator<UpdateOfferDto>, UpdateOfferDtoValidator>();

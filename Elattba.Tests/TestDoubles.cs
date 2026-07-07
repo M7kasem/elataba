@@ -2,7 +2,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ElAtaba.Domain.Entities;
+using Elattba.Application.Auth;
 using Elattba.Application.ProductImages;
+using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
 using Elattba.Core.Services;
 
@@ -149,7 +151,55 @@ internal sealed class FakeUserRepository : FakeRepository<User>, IUserRepository
 internal sealed class FakeStoreRepository : FakeRepository<Store>, IStoreRepository;
 internal sealed class FakeGovernorateRepository : FakeRepository<Governorate>, IGovernorateRepository;
 internal sealed class FakeCategoryRepository : FakeRepository<Category>, ICategoryRepository;
-internal sealed class FakeProductRepository : FakeRepository<Product>, IProductRepository;
+internal sealed class FakeProductRepository : FakeRepository<Product>, IProductRepository
+{
+    public Task<PagedList<Product>> GetPagedAsync(ProductParams productParams)
+    {
+        IEnumerable<Product> query = Items;
+
+        if (productParams.CategoryId.HasValue && productParams.CategoryId.Value > 0)
+        {
+            query = query.Where(product => product.CategoryId == productParams.CategoryId.Value);
+        }
+
+        foreach (var token in TokenizeSearch(productParams.Search))
+        {
+            query = query.Where(product =>
+                product.Name.Contains(token, StringComparison.OrdinalIgnoreCase) ||
+                product.Description.Contains(token, StringComparison.OrdinalIgnoreCase));
+        }
+
+        query = productParams.Sort switch
+        {
+            "priceAsc" => query.OrderBy(product => product.BasePrice),
+            "priceDesc" => query.OrderByDescending(product => product.BasePrice),
+            _ => query.OrderBy(product => product.Name)
+        };
+
+        var count = query.Count();
+        var items = query
+            .Skip((productParams.PageNumber - 1) * productParams.PageSize)
+            .Take(productParams.PageSize)
+            .ToList();
+
+        return Task.FromResult(new PagedList<Product>(
+            productParams.PageNumber,
+            productParams.PageSize,
+            count,
+            items));
+    }
+
+    private static IReadOnlyList<string> TokenizeSearch(string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return [];
+        }
+
+        return search
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+}
 internal sealed class FakeProductImageRepository : FakeRepository<ProductImage>, IProductImageRepository;
 internal sealed class FakePricingTierRepository : FakeRepository<PricingTier>, IPricingTierRepository;
 internal sealed class FakeOfferRepository : FakeRepository<Offer>, IOfferRepository;
@@ -160,6 +210,15 @@ internal sealed class FakeReviewRepository : FakeRepository<Review>, IReviewRepo
 internal sealed class FakeMessageRepository : FakeRepository<Message>, IMessageRepository;
 internal sealed class FakeCarrierRepository : FakeRepository<Carrier>, ICarrierRepository;
 internal sealed class FakeShippingRateRepository : FakeRepository<ShippingRate>, IShippingRateRepository;
+
+internal sealed class FakeCurrentUserService : ICurrentUserService
+{
+    public bool IsAuthenticated { get; init; } = true;
+    public string? IdentityUserId { get; init; }
+    public int? UserId { get; init; }
+    public int? StoreId { get; init; }
+    public string? Role { get; init; } = AuthConstants.BuyerRole;
+}
 
 internal sealed class FakeImageManagementService : IImageManagementService
 {
@@ -191,6 +250,12 @@ internal sealed class FakeImageManagementService : IImageManagementService
     }
 
     public void DeleteImage(string src) => DeletedImages.Add(src);
+}
+
+internal sealed class FakeImageEmbeddingService : IImageEmbeddingService
+{
+    public Task<float[]> GenerateEmbeddingAsync(Stream imageStream, CancellationToken cancellationToken = default) =>
+        Task.FromResult<float[]>([1, 0, 0]);
 }
 
 internal sealed class FakeProductImageEmbeddingQueue : IProductImageEmbeddingQueue

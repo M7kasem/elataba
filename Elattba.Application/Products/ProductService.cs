@@ -28,19 +28,24 @@ public sealed class ProductService : IProductService
         _currentUserService = currentUserService;
     }
 
-    public async Task<ServiceResult<IReadOnlyList<ProductDto>>> GetAllAsync()
+    public async Task<ServiceResult<Pagination<ProductDto>>> GetAllAsync(ProductParams productParams)
     {
         try
         {
-            var products = await GetProductsWithDetailsAsync();
+            var products = await _unitOfWork.Products.GetPagedAsync(productParams);
             var activeOffers = await GetActiveOffersAsync();
-            var data = products.Select(product => product.ToProductDto(activeOffers)).ToList();
+            var data = products.Items.Select(product => product.ToProductDto(activeOffers)).ToList();
+            var pagination = new Pagination<ProductDto>(
+                products.PageNumber,
+                products.PageSize,
+                products.Count,
+                data);
 
-            return new ServiceResult<IReadOnlyList<ProductDto>>(true, 200, "Products retrieved successfully", data);
+            return new ServiceResult<Pagination<ProductDto>>(true, 200, "Products retrieved successfully", pagination);
         }
         catch (Exception ex)
         {
-            return Failure<IReadOnlyList<ProductDto>>(ex);
+            return Failure<Pagination<ProductDto>>(ex);
         }
     }
 
