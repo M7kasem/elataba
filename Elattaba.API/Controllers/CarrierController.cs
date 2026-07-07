@@ -1,123 +1,61 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
-using Elattba.Application.Common;
+using Elattba.Application.Carriers;
 using Elattba.Core.DTOs;
-using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CarrierController : BaseController
+public class CarrierController : ControllerBase
 {
-    public CarrierController(IUnitOfWork unitOfWork) : base(unitOfWork)
+    private readonly ICarrierService _carrierService;
+
+    public CarrierController(ICarrierService carrierService)
     {
+        _carrierService = carrierService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var carriers = await _unitOfWork.Carriers.GetAllAsync();
-            var data = carriers.Select(carrier => carrier.ToDto()).ToList();
-            return Ok(new ResponseAPI(200, "Carriers retrieved successfully", data));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _carrierService.GetAllAsync();
+        return this.ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var carrier = await _unitOfWork.Carriers.GetByIdAsync(id);
-            if (carrier == null)
-            {
-                return NotFound(new ResponseAPI(404, "Carrier not found."));
-            }
-
-            return Ok(new ResponseAPI(200, "Carrier retrieved successfully", carrier.ToDto()));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _carrierService.GetByIdAsync(id);
+        return this.ToActionResult(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateCarrierDto createCarrierDto)
     {
-        try
+        var result = await _carrierService.CreateAsync(createCarrierDto);
+        if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
         {
-            var carrier = new Carrier
-            {
-                Name = createCarrierDto.Name,
-                IsActive = createCarrierDto.IsActive
-            };
-
-            await _unitOfWork.Carriers.AddAsync(carrier);
-            await _unitOfWork.CompleteAsync();
-
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = carrier.CarrierId },
-                new ResponseAPI(201, "Carrier created successfully", carrier.ToDto()));
+                new { id = result.Data.CarrierId },
+                new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+
+        return this.ToActionResult(result);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateCarrierDto updateCarrierDto)
     {
-        try
-        {
-            var carrier = await _unitOfWork.Carriers.GetByIdAsync(id);
-            if (carrier == null)
-            {
-                return NotFound(new ResponseAPI(404, "Carrier not found."));
-            }
-
-            carrier.Name = updateCarrierDto.Name;
-            carrier.IsActive = updateCarrierDto.IsActive;
-
-            await _unitOfWork.Carriers.UpdateAsync(carrier);
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new ResponseAPI(200, "Carrier updated successfully", carrier.ToDto()));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _carrierService.UpdateAsync(id, updateCarrierDto);
+        return this.ToActionResult(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var carrier = await _unitOfWork.Carriers.GetByIdAsync(id);
-            if (carrier == null)
-            {
-                return NotFound(new ResponseAPI(404, "Carrier not found."));
-            }
-
-            await _unitOfWork.Carriers.DeleteAsync(id);
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new ResponseAPI(200, "Carrier deleted successfully"));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _carrierService.DeleteAsync(id);
+        return this.ToActionResult(result);
     }
 }

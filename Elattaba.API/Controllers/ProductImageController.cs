@@ -26,14 +26,14 @@ public class ProductImageController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var result = await _productImageService.GetAllAsync();
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _productImageService.GetByIdAsync(id);
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     [HttpPost]
@@ -78,7 +78,7 @@ public class ProductImageController : ControllerBase
                 imageFiles,
                 uploadDto.PrimaryImageIndex));
 
-            return ToActionResult(result);
+            return this.ToActionResult(result);
         }
         finally
         {
@@ -94,21 +94,21 @@ public class ProductImageController : ControllerBase
             : _environment.WebRootPath;
 
         var result = await _productImageService.RebuildEmbeddingsAsync(webRootPath);
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductImageDto updateProductImageDto)
     {
         var result = await _productImageService.UpdateAsync(id, updateProductImageDto);
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _productImageService.DeleteAsync(id);
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     private IActionResult ToCreatedActionResult(ServiceResult<ProductImageDto> result)
@@ -121,34 +121,7 @@ public class ProductImageController : ControllerBase
                 new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
 
-        return ToActionResult(result);
-    }
-
-    private IActionResult ToActionResult<T>(ServiceResult<T> result)
-    {
-        var response = new ResponseAPI(result.StatusCode, result.Message, result.Data);
-
-        return result.StatusCode switch
-        {
-            200 => Ok(response),
-            404 => NotFound(response),
-            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
-            _ => StatusCode(result.StatusCode, response)
-        };
-    }
-
-    private IActionResult ToActionResult(ServiceResult result)
-    {
-        var response = new ResponseAPI(result.StatusCode, result.Message);
-
-        return result.StatusCode switch
-        {
-            200 => Ok(response),
-            204 => NoContent(),
-            404 => NotFound(response),
-            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
-            _ => StatusCode(result.StatusCode, response)
-        };
+        return this.ToActionResult(result);
     }
 
     private static IReadOnlyList<ImageUploadFile> ToUploadFiles(IEnumerable<IFormFile> images)

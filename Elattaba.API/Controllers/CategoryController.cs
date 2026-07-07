@@ -1,123 +1,62 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
-using Elattba.Application.Common;
+using Elattba.Application.Categories;
 using Elattba.Core.DTOs;
-using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoryController : BaseController
+    public class CategoryController : ControllerBase
     {
-        public CategoryController(IUnitOfWork unitOfWork) : base(unitOfWork)
+        private readonly ICategoryService _categoryService;
+
+        public CategoryController(ICategoryService categoryService)
         {
+            _categoryService = categoryService;
         }
 
         [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                var categories = await _unitOfWork.Categories.GetAllAsync();
-                var data = categories.Select(category => category.ToDto()).ToList();
-                return Ok(new ResponseAPI(200, "Categories retrieved successfully", data));
-            }
-            catch (Exception)
-            {
-                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-            }
+            var result = await _categoryService.GetAllAsync();
+            return this.ToActionResult(result);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            try
-            {
-                var category = await _unitOfWork.Categories.GetByIdAsync(id);
-                if (category == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Category not found."));
-                }
-
-                return Ok(new ResponseAPI(200, "Category retrieved successfully", category.ToDto()));
-            }
-            catch (Exception)
-            {
-                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-            }
+            var result = await _categoryService.GetByIdAsync(id);
+            return this.ToActionResult(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateCategoryDto createCategoryDto)
         {
-            try
+            var result = await _categoryService.CreateAsync(createCategoryDto);
+            if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
             {
-                var category = new Category
-                {
-                    Name = createCategoryDto.Name,
-                    Description = createCategoryDto.Description
-                };
-
-                await _unitOfWork.Categories.AddAsync(category);
-                await _unitOfWork.CompleteAsync();
-
                 return CreatedAtAction(
                     nameof(GetById),
-                    new { id = category.CategoryId },
-                    new ResponseAPI(201, "Category created successfully", category.ToDto()));
+                    new { id = result.Data.CategoryId },
+                    new ResponseAPI(result.StatusCode, result.Message, result.Data));
             }
-            catch (Exception)
-            {
-                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-            }
-            
+
+            return this.ToActionResult(result);
         }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryDto updateCategoryDto)
         {
-            try
-            {
-                var category = await _unitOfWork.Categories.GetByIdAsync(id);
-                if (category == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Category not found."));
-                }
-
-                category.Name = updateCategoryDto.Name;
-                category.Description = updateCategoryDto.Description;
-
-                await _unitOfWork.Categories.UpdateAsync(category);
-                await _unitOfWork.CompleteAsync();
-
-                return NoContent();
-            }
-            catch (Exception)
-            {
-                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-            }
+            var result = await _categoryService.UpdateAsync(id, updateCategoryDto);
+            return this.ToActionResult(result);
         }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                var category = await _unitOfWork.Categories.GetByIdAsync(id);
-                if (category == null)
-                {
-                    return NotFound(new ResponseAPI(404, "Category not found."));
-                }
-
-                await _unitOfWork.Categories.DeleteAsync(category.CategoryId);
-                await _unitOfWork.CompleteAsync();
-
-                return NoContent();
-            }
-            catch (Exception)
-            {
-                return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-            }
+            var result = await _categoryService.DeleteAsync(id);
+            return this.ToActionResult(result);
         }
     }
 }

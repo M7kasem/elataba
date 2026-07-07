@@ -1,121 +1,61 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
-using Elattba.Application.Common;
+using Elattba.Application.Governorates;
 using Elattba.Core.DTOs;
-using Elattba.Core.InterFaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class GovernorateController : BaseController
+public class GovernorateController : ControllerBase
 {
-    public GovernorateController(IUnitOfWork unitOfWork) : base(unitOfWork)
+    private readonly IGovernorateService _governorateService;
+
+    public GovernorateController(IGovernorateService governorateService)
     {
+        _governorateService = governorateService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var governorates = await _unitOfWork.Governorates.GetAllAsync();
-            var data = governorates.Select(governorate => governorate.ToDto()).ToList();
-            return Ok(new ResponseAPI(200, "Governorates retrieved successfully", data));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _governorateService.GetAllAsync();
+        return this.ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        try
-        {
-            var governorate = await _unitOfWork.Governorates.GetByIdAsync(id);
-            if (governorate == null)
-            {
-                return NotFound(new ResponseAPI(404, "Governorate not found."));
-            }
-
-            return Ok(new ResponseAPI(200, "Governorate retrieved successfully", governorate.ToDto()));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _governorateService.GetByIdAsync(id);
+        return this.ToActionResult(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateGovernorateDto createGovernorateDto)
     {
-        try
+        var result = await _governorateService.CreateAsync(createGovernorateDto);
+        if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
         {
-            var governorate = new Governorate
-            {
-                Name = createGovernorateDto.Name
-            };
-
-            await _unitOfWork.Governorates.AddAsync(governorate);
-            await _unitOfWork.CompleteAsync();
-
             return CreatedAtAction(
                 nameof(GetById),
-                new { id = governorate.GovernorateId },
-                new ResponseAPI(201, "Governorate created successfully", governorate.ToDto()));
+                new { id = result.Data.GovernorateId },
+                new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+
+        return this.ToActionResult(result);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateGovernorateDto updateGovernorateDto)
     {
-        try
-        {
-            var governorate = await _unitOfWork.Governorates.GetByIdAsync(id);
-            if (governorate == null)
-            {
-                return NotFound(new ResponseAPI(404, "Governorate not found."));
-            }
-
-            governorate.Name = updateGovernorateDto.Name;
-
-            await _unitOfWork.Governorates.UpdateAsync(governorate);
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new ResponseAPI(200, "Governorate updated successfully", governorate.ToDto()));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _governorateService.UpdateAsync(id, updateGovernorateDto);
+        return this.ToActionResult(result);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            var governorate = await _unitOfWork.Governorates.GetByIdAsync(id);
-            if (governorate == null)
-            {
-                return NotFound(new ResponseAPI(404, "Governorate not found."));
-            }
-
-            await _unitOfWork.Governorates.DeleteAsync(id);
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new ResponseAPI(200, "Governorate deleted successfully"));
-        }
-        catch (Exception)
-        {
-            return Problem(statusCode: 500, title: "Internal Server Error", detail: "Unexpected server error.");
-        }
+        var result = await _governorateService.DeleteAsync(id);
+        return this.ToActionResult(result);
     }
 }

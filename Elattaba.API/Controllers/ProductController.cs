@@ -24,14 +24,14 @@ public class ProductController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var result = await _productService.GetAllAsync();
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _productService.GetByIdAsync(id);
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     [HttpPost]
@@ -107,7 +107,7 @@ public class ProductController : ControllerBase
             searchByImageDto.TopK,
             _configuration.GetValue("ImageSearch:DefaultTopK", 10)));
 
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     [HttpPut("{id}")]
@@ -127,7 +127,7 @@ public class ProductController : ControllerBase
                 updateProductDto.PrimaryImageIndex,
                 imageFiles));
 
-            return ToActionResult(result);
+            return this.ToActionResult(result);
         }
         finally
         {
@@ -139,7 +139,7 @@ public class ProductController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _productService.DeleteAsync(id);
-        return ToActionResult(result);
+        return this.ToActionResult(result);
     }
 
     private IActionResult ToCreatedProductActionResult(ServiceResult<ProductDto> result)
@@ -152,34 +152,7 @@ public class ProductController : ControllerBase
                 new ResponseAPI(result.StatusCode, result.Message, result.Data));
         }
 
-        return ToActionResult(result);
-    }
-
-    private IActionResult ToActionResult<T>(ServiceResult<T> result)
-    {
-        var response = new ResponseAPI(result.StatusCode, result.Message, result.Data);
-
-        return result.StatusCode switch
-        {
-            200 => Ok(response),
-            404 => NotFound(response),
-            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
-            _ => StatusCode(result.StatusCode, response)
-        };
-    }
-
-    private IActionResult ToActionResult(ServiceResult result)
-    {
-        var response = new ResponseAPI(result.StatusCode, result.Message);
-
-        return result.StatusCode switch
-        {
-            200 => Ok(response),
-            204 => NoContent(),
-            404 => NotFound(response),
-            >= 500 => Problem(statusCode: result.StatusCode, title: "Internal Server Error", detail: result.Message),
-            _ => StatusCode(result.StatusCode, response)
-        };
+        return this.ToActionResult(result);
     }
 
     private static IReadOnlyList<ImageUploadFile> ToUploadFiles(IReadOnlyList<IFormFile> images)
