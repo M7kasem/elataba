@@ -1,7 +1,9 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Reviews;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -32,6 +34,7 @@ public class ReviewController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.BuyerOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateReviewDto createReviewDto)
     {
         var result = await _reviewService.CreateAsync(createReviewDto);
@@ -47,6 +50,7 @@ public class ReviewController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.BuyerOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateReviewDto updateReviewDto)
     {
         var result = await _reviewService.UpdateAsync(id, updateReviewDto);
@@ -54,6 +58,7 @@ public class ReviewController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.BuyerOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _reviewService.DeleteAsync(id);

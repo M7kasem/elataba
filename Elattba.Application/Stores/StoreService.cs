@@ -1,4 +1,5 @@
 using ElAtaba.Domain.Entities;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
@@ -8,10 +9,12 @@ namespace Elattba.Application.Stores;
 public sealed class StoreService : IStoreService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService? _currentUserService;
 
-    public StoreService(IUnitOfWork unitOfWork)
+    public StoreService(IUnitOfWork unitOfWork, ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<StoreDto>>> GetAllAsync()
@@ -60,6 +63,12 @@ public sealed class StoreService : IStoreService
             if (owner == null)
             {
                 return new ServiceResult<StoreDto>(false, 404, "Owner not found.");
+            }
+
+            var ownerAuthorizationError = EnsureCurrentOwner(dto.OwnerId);
+            if (ownerAuthorizationError != null)
+            {
+                return ownerAuthorizationError;
             }
 
             if (await _unitOfWork.Stores.AnyAsync(store => store.OwnerId == dto.OwnerId))
@@ -111,6 +120,12 @@ public sealed class StoreService : IStoreService
             if (store == null)
             {
                 return new ServiceResult<StoreDto>(false, 404, "Store not found.");
+            }
+
+            var storeAuthorizationError = EnsureCanManageStore(store);
+            if (storeAuthorizationError != null)
+            {
+                return storeAuthorizationError;
             }
 
             var managerResult = await GetManagerAsync(dto.ManagerId);
@@ -191,4 +206,30 @@ public sealed class StoreService : IStoreService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    private ServiceResult<StoreDto>? EnsureCurrentOwner(int ownerId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.UserId == ownerId
+            ? null
+            : new ServiceResult<StoreDto>(false, 403, "You are not allowed to create a store for another owner.");
+    }
+
+    private ServiceResult<StoreDto>? EnsureCanManageStore(Store store)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.UserId == store.OwnerId ||
+               _currentUserService.UserId == store.ManagerId ||
+               _currentUserService.StoreId == store.StoreId
+            ? null
+            : new ServiceResult<StoreDto>(false, 403, "You are not allowed to manage this store.");
+    }
 }

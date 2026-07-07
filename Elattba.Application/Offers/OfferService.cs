@@ -1,4 +1,5 @@
 using ElAtaba.Domain.Entities;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
@@ -8,10 +9,12 @@ namespace Elattba.Application.Offers;
 public sealed class OfferService : IOfferService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService? _currentUserService;
 
-    public OfferService(IUnitOfWork unitOfWork)
+    public OfferService(IUnitOfWork unitOfWork, ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<OfferDto>>> GetAllAsync()
@@ -69,6 +72,12 @@ public sealed class OfferService : IOfferService
                 return new ServiceResult<OfferDto>(false, 404, "Store not found.");
             }
 
+            var authorizationError = EnsureCanManageStore(dto.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             var productValidationError = await ValidateProductsBelongToStoreAsync(productIds, dto.StoreId);
             if (productValidationError != null)
             {
@@ -123,6 +132,12 @@ public sealed class OfferService : IOfferService
             if (offer == null)
             {
                 return new ServiceResult<OfferDto>(false, 404, "Offer not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(offer.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             var productIds = OfferBusinessRules.GetDistinctProductIds(dto.ProductIds);
@@ -189,6 +204,12 @@ public sealed class OfferService : IOfferService
             if (offer == null)
             {
                 return new ServiceResult(false, 404, "Offer not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(offer.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             await _unitOfWork.Offers.DeleteAsync(id);
@@ -278,4 +299,16 @@ public sealed class OfferService : IOfferService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    private ServiceResult<OfferDto>? EnsureCanManageStore(int storeId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.StoreId == storeId
+            ? null
+            : new ServiceResult<OfferDto>(false, 403, "You are not allowed to manage this store.");
+    }
 }

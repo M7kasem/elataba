@@ -1,6 +1,8 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Carriers;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -31,6 +33,7 @@ public class CarrierController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateCarrierDto createCarrierDto)
     {
         var result = await _carrierService.CreateAsync(createCarrierDto);
@@ -46,6 +49,7 @@ public class CarrierController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateCarrierDto updateCarrierDto)
     {
         var result = await _carrierService.UpdateAsync(id, updateCarrierDto);
@@ -53,6 +57,7 @@ public class CarrierController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _carrierService.DeleteAsync(id);

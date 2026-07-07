@@ -1,7 +1,9 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Orders;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -18,6 +20,7 @@ public class OrderItemController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetAll()
     {
         var result = await _orderItemService.GetAllAsync();
@@ -25,6 +28,7 @@ public class OrderItemController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _orderItemService.GetByIdAsync(id);
@@ -32,6 +36,7 @@ public class OrderItemController : ControllerBase
     }
 
     [HttpPost("{orderId}")]
+    [Authorize(Policy = AuthConstants.BuyerOnlyPolicy)]
     public async Task<IActionResult> Create(int orderId, [FromBody] CreateOrderItemDto createOrderItemDto)
     {
         var result = await _orderItemService.CreateAsync(orderId, createOrderItemDto);
@@ -47,6 +52,7 @@ public class OrderItemController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.BuyerOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateOrderItemDto updateOrderItemDto)
     {
         var result = await _orderItemService.UpdateAsync(id, updateOrderItemDto);
@@ -54,6 +60,7 @@ public class OrderItemController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.BuyerOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _orderItemService.DeleteAsync(id);

@@ -1,6 +1,8 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.PricingTiers;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -31,6 +33,7 @@ public class PricingTierController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreatePricingTierDto createPricingTierDto)
     {
         var result = await _pricingTierService.CreateAsync(createPricingTierDto);
@@ -46,6 +49,7 @@ public class PricingTierController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdatePricingTierDto updatePricingTierDto)
     {
         var result = await _pricingTierService.UpdateAsync(id, updatePricingTierDto);
@@ -53,6 +57,7 @@ public class PricingTierController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _pricingTierService.DeleteAsync(id);

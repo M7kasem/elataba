@@ -3,6 +3,7 @@ using Elattaba.API.ExceptionHandling;
 using Elattaba.API.Controllers;
 using Elattaba.API.Services;
 using Elattaba.API.Validation;
+using Elattba.Application.Auth;
 using Elattba.Application.Carriers;
 using Elattba.Application.Categories;
 using Elattba.Application.Governorates;
@@ -58,6 +59,10 @@ namespace Elattaba.API.Extensions
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
             services.InfrastructureConfiguration(configuration);
+            services.AddHybridAuthentication(configuration);
+            services.AddHttpContextAccessor();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<ITokenService, JwtTokenService>();
             services.AddScoped<ICarrierService, CarrierService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IGovernorateService, GovernorateService>();

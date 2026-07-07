@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElAtaba.Domain.Entities;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Offers;
 using Elattba.Core.DTOs;
@@ -13,15 +14,18 @@ public sealed class ProductService : IProductService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IImageEmbeddingService _imageEmbeddingService;
     private readonly IImageManagementService _imageManagementService;
+    private readonly ICurrentUserService? _currentUserService;
 
     public ProductService(
         IUnitOfWork unitOfWork,
         IImageEmbeddingService imageEmbeddingService,
-        IImageManagementService imageManagementService)
+        IImageManagementService imageManagementService,
+        ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
         _imageEmbeddingService = imageEmbeddingService;
         _imageManagementService = imageManagementService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<ProductDto>>> GetAllAsync()
@@ -69,6 +73,12 @@ public sealed class ProductService : IProductService
             if (store == null)
             {
                 return new ServiceResult<ProductDto>(false, 404, "Store not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(store.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             var category = await _unitOfWork.Categories.GetByIdAsync(command.CategoryId);
@@ -137,6 +147,12 @@ public sealed class ProductService : IProductService
             if (store == null)
             {
                 return new ServiceResult<ProductDto>(false, 404, "Store not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(store.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             var category = await _unitOfWork.Categories.GetByIdAsync(command.CategoryId);
@@ -304,6 +320,12 @@ public sealed class ProductService : IProductService
                 return new ServiceResult<ProductDto>(false, 404, "Product not found.");
             }
 
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             var category = await _unitOfWork.Categories.GetByIdAsync(command.CategoryId);
             if (category == null)
             {
@@ -390,6 +412,12 @@ public sealed class ProductService : IProductService
             if (product == null)
             {
                 return new ServiceResult(false, 404, "Product not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             var imageUrls = (await _unitOfWork.ProductImages.ListAsync(image => image.ProductId == id))
@@ -547,6 +575,30 @@ public sealed class ProductService : IProductService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    private ServiceResult<ProductDto>? EnsureCanManageStore(int storeId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.StoreId == storeId
+            ? null
+            : new ServiceResult<ProductDto>(false, 403, "You are not allowed to manage this store.");
+    }
+
+    private ServiceResult? EnsureCanManageStoreForDelete(int storeId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.StoreId == storeId
+            ? null
+            : new ServiceResult(false, 403, "You are not allowed to manage this store.");
+    }
 
     private static bool IsConcurrencyException(Exception ex) =>
         ex.GetType().FullName == "Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException";

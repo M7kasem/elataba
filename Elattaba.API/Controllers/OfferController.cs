@@ -1,7 +1,9 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Offers;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -32,6 +34,7 @@ public class OfferController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateOfferDto createOfferDto)
     {
         var result = await _offerService.CreateAsync(createOfferDto);
@@ -47,6 +50,7 @@ public class OfferController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateOfferDto updateOfferDto)
     {
         var result = await _offerService.UpdateAsync(id, updateOfferDto);
@@ -54,6 +58,7 @@ public class OfferController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _offerService.DeleteAsync(id);

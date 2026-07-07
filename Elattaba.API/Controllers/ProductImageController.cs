@@ -1,8 +1,10 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.ProductImages;
 using Elattba.Core.DTOs;
 using Elattba.Core.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -37,6 +39,7 @@ public class ProductImageController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateProductImageDto createProductImageDto)
     {
         var result = await _productImageService.CreateAsync(createProductImageDto);
@@ -44,6 +47,7 @@ public class ProductImageController : ControllerBase
     }
 
     [HttpPost("upload")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Upload([FromForm] UploadProductImageFormDto uploadDto)
     {
@@ -66,6 +70,7 @@ public class ProductImageController : ControllerBase
     }
 
     [HttpPost("upload-many")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadMany([FromForm] UploadManyProductImagesFormDto uploadDto)
     {
@@ -87,6 +92,7 @@ public class ProductImageController : ControllerBase
     }
 
     [HttpPost("rebuild-embeddings")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> RebuildEmbeddings()
     {
         var webRootPath = string.IsNullOrWhiteSpace(_environment.WebRootPath)
@@ -98,6 +104,7 @@ public class ProductImageController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductImageDto updateProductImageDto)
     {
         var result = await _productImageService.UpdateAsync(id, updateProductImageDto);
@@ -105,6 +112,7 @@ public class ProductImageController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _productImageService.DeleteAsync(id);

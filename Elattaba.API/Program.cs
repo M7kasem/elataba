@@ -1,4 +1,5 @@
 using Elattaba.API.Extensions;
+using Elattaba.API.Services;
 namespace Elattaba.API
 {
     public class Program
@@ -12,6 +13,7 @@ namespace Elattaba.API
 
             var app = builder.Build();
 
+            app.Services.SeedIdentityRolesAsync().GetAwaiter().GetResult();
             app.UseApiMiddlewares();
             app.MapApiEndpoints();
 

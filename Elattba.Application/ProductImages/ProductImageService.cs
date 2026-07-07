@@ -1,4 +1,5 @@
 using ElAtaba.Domain.Entities;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Products;
 using Elattba.Core.DTOs;
@@ -12,15 +13,18 @@ public sealed class ProductImageService : IProductImageService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IImageManagementService _imageManagementService;
     private readonly IProductImageEmbeddingQueue _embeddingQueue;
+    private readonly ICurrentUserService? _currentUserService;
 
     public ProductImageService(
         IUnitOfWork unitOfWork,
         IImageManagementService imageManagementService,
-        IProductImageEmbeddingQueue embeddingQueue)
+        IProductImageEmbeddingQueue embeddingQueue,
+        ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
         _imageManagementService = imageManagementService;
         _embeddingQueue = embeddingQueue;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<ProductImageDto>>> GetAllAsync()
@@ -66,6 +70,12 @@ public sealed class ProductImageService : IProductImageService
                 return new ServiceResult<ProductImageDto>(false, 404, "Product not found.");
             }
 
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             if (dto.IsPrimary)
             {
                 await ClearPrimaryImagesAsync(dto.ProductId);
@@ -99,6 +109,12 @@ public sealed class ProductImageService : IProductImageService
             if (product == null)
             {
                 return new ServiceResult<ProductImageDto>(false, 404, "Product not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             uploadedImageUrl = await _imageManagementService.AddImageAsync(command.Image, "products");
@@ -144,6 +160,12 @@ public sealed class ProductImageService : IProductImageService
             if (product == null)
             {
                 return new ServiceResult<IReadOnlyList<ProductImageDto>>(false, 404, "Product not found.");
+            }
+
+            var authorizationError = EnsureCanManageStoreForList(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             if (command.Images.Count == 0)
@@ -246,6 +268,17 @@ public sealed class ProductImageService : IProductImageService
             }
 
             var oldImageUrl = image.ImageUrl;
+            var product = await _unitOfWork.Products.GetByIdAsync(image.ProductId);
+            if (product == null)
+            {
+                return new ServiceResult<ProductImageDto>(false, 404, "Product not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
 
             if (dto.IsPrimary)
             {
@@ -291,6 +324,17 @@ public sealed class ProductImageService : IProductImageService
             }
 
             var imageUrl = image.ImageUrl;
+            var product = await _unitOfWork.Products.GetByIdAsync(image.ProductId);
+            if (product == null)
+            {
+                return new ServiceResult(false, 404, "Product not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
 
             await _unitOfWork.ProductImages.DeleteAsync(id);
             await _unitOfWork.CompleteAsync();
@@ -357,4 +401,28 @@ public sealed class ProductImageService : IProductImageService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    private ServiceResult<ProductImageDto>? EnsureCanManageStore(int storeId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.StoreId == storeId
+            ? null
+            : new ServiceResult<ProductImageDto>(false, 403, "You are not allowed to manage images for this store.");
+    }
+
+    private ServiceResult<IReadOnlyList<ProductImageDto>>? EnsureCanManageStoreForList(int storeId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.StoreId == storeId
+            ? null
+            : new ServiceResult<IReadOnlyList<ProductImageDto>>(false, 403, "You are not allowed to manage images for this store.");
+    }
 }

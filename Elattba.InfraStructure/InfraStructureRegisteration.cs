@@ -1,6 +1,7 @@
 using Elattba.Core.InterFaces;
 using Elattba.Core.Services;
 using Elattba.InfraStructure.Data;
+using Elattba.InfraStructure.Identity;
 using Elattba.InfraStructure.Repository;
 using Elattba.InfraStructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,10 @@ namespace Elattba.InfraStructure
                 op.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
 
+            services.AddDbContext<AppIdentityDbContext>(op =>
+            {
+                op.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            });
 
             return services;
         }

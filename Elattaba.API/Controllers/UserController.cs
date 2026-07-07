@@ -1,7 +1,9 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Users;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -18,6 +20,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _userService.GetAllAsync();
@@ -25,6 +28,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _userService.GetByIdAsync(id);
@@ -32,6 +36,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateUserDto createUserDto)
     {
         var result = await _userService.CreateAsync(createUserDto);
@@ -47,6 +52,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto updateUserDto)
     {
         var result = await _userService.UpdateAsync(id, updateUserDto);
@@ -54,6 +60,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _userService.DeleteAsync(id);

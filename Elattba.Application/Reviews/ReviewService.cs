@@ -1,5 +1,6 @@
 using ElAtaba.Domain.Entities;
 using ElAtaba.Domain.Enums;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
@@ -9,10 +10,12 @@ namespace Elattba.Application.Reviews;
 public sealed class ReviewService : IReviewService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService? _currentUserService;
 
-    public ReviewService(IUnitOfWork unitOfWork)
+    public ReviewService(IUnitOfWork unitOfWork, ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<ReviewDto>>> GetAllAsync()
@@ -60,6 +63,12 @@ public sealed class ReviewService : IReviewService
             if (order == null)
             {
                 return new ServiceResult<ReviewDto>(false, 404, "Order not found.");
+            }
+
+            var authorizationError = EnsureCurrentBuyer(dto.BuyerId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
             }
 
             if (order.Status != OrderStatus.Delivered)
@@ -114,6 +123,12 @@ public sealed class ReviewService : IReviewService
                 return new ServiceResult<ReviewDto>(false, 404, "Review not found.");
             }
 
+            var authorizationError = EnsureCurrentBuyer(review.BuyerId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             review.Rating = dto.Rating;
             review.Comment = dto.Comment;
 
@@ -139,6 +154,12 @@ public sealed class ReviewService : IReviewService
                 return new ServiceResult(false, 404, "Review not found.");
             }
 
+            var authorizationError = EnsureCurrentBuyer(review.BuyerId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             await _unitOfWork.Reviews.DeleteAsync(id);
             await _unitOfWork.CompleteAsync();
 
@@ -161,4 +182,16 @@ public sealed class ReviewService : IReviewService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    private ServiceResult<ReviewDto>? EnsureCurrentBuyer(int buyerId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.UserId == buyerId
+            ? null
+            : new ServiceResult<ReviewDto>(false, 403, "You are not allowed to manage reviews for another buyer.");
+    }
 }

@@ -1,4 +1,5 @@
 using ElAtaba.Domain.Entities;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Offers;
 using Elattba.Core.DTOs;
@@ -9,10 +10,12 @@ namespace Elattba.Application.Orders;
 public sealed class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService? _currentUserService;
 
-    public OrderService(IUnitOfWork unitOfWork)
+    public OrderService(IUnitOfWork unitOfWork, ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<OrderDto>>> GetAllAsync()
@@ -65,6 +68,12 @@ public sealed class OrderService : IOrderService
             if (dto.OrderItems.Any(item => item.ProductId <= 0))
             {
                 return new ServiceResult<OrderDto>(false, 400, "Order item product id must be greater than zero.");
+            }
+
+            var buyerAuthorizationError = EnsureCurrentBuyer(dto.BuyerId);
+            if (buyerAuthorizationError != null)
+            {
+                return buyerAuthorizationError;
             }
 
             var buyer = await _unitOfWork.Users.GetByIdAsync(dto.BuyerId);
@@ -180,6 +189,12 @@ public sealed class OrderService : IOrderService
                 return new ServiceResult<OrderDto>(false, 404, "Order not found.");
             }
 
+            var storeAuthorizationError = EnsureCanManageStore(order.StoreId);
+            if (storeAuthorizationError != null)
+            {
+                return storeAuthorizationError;
+            }
+
             if (dto.CarrierId.HasValue)
             {
                 var carrier = await _unitOfWork.Carriers.GetByIdAsync(dto.CarrierId.Value);
@@ -260,6 +275,30 @@ public sealed class OrderService : IOrderService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    private ServiceResult<OrderDto>? EnsureCurrentBuyer(int buyerId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.UserId == buyerId
+            ? null
+            : new ServiceResult<OrderDto>(false, 403, "You are not allowed to create orders for another buyer.");
+    }
+
+    private ServiceResult<OrderDto>? EnsureCanManageStore(int storeId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.StoreId == storeId
+            ? null
+            : new ServiceResult<OrderDto>(false, 403, "You are not allowed to manage orders for this store.");
+    }
 
     private static bool IsConcurrencyException(Exception ex) =>
         ex.GetType().FullName == "Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException";

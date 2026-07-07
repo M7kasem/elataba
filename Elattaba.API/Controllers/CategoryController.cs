@@ -1,6 +1,8 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Categories;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers
@@ -31,6 +33,7 @@ namespace Elattaba.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
         public async Task<IActionResult> Create([FromBody] CreateCategoryDto createCategoryDto)
         {
             var result = await _categoryService.CreateAsync(createCategoryDto);
@@ -46,6 +49,7 @@ namespace Elattaba.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateCategoryDto updateCategoryDto)
         {
             var result = await _categoryService.UpdateAsync(id, updateCategoryDto);
@@ -53,6 +57,7 @@ namespace Elattaba.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _categoryService.DeleteAsync(id);

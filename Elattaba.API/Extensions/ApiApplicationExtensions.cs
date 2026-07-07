@@ -21,6 +21,7 @@ namespace Elattaba.API.Extensions
 
             app.UseStaticFiles();
             app.UseApiRateLimiting();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             return app;

@@ -1,7 +1,9 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Messages;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -18,6 +20,7 @@ public class MessageController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> GetAll()
     {
         var result = await _messageService.GetAllAsync();
@@ -25,6 +28,7 @@ public class MessageController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _messageService.GetByIdAsync(id);
@@ -32,6 +36,7 @@ public class MessageController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] CreateMessageDto createMessageDto)
     {
         var result = await _messageService.CreateAsync(createMessageDto);
@@ -47,6 +52,7 @@ public class MessageController : ControllerBase
     }
 
     [HttpPatch("{id}/read")]
+    [Authorize]
     public async Task<IActionResult> MarkAsRead(int id, [FromBody] MarkMessageAsReadDto markMessageAsReadDto)
     {
         var result = await _messageService.MarkAsReadAsync(id, markMessageAsReadDto);
@@ -54,6 +60,7 @@ public class MessageController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _messageService.DeleteAsync(id);

@@ -1,7 +1,9 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Stores;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -32,6 +34,7 @@ public class StoreController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateStoreDto createStoreDto)
     {
         var result = await _storeService.CreateAsync(createStoreDto);
@@ -47,6 +50,7 @@ public class StoreController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateStoreDto updateStoreDto)
     {
         var result = await _storeService.UpdateAsync(id, updateStoreDto);
@@ -54,6 +58,7 @@ public class StoreController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _storeService.DeleteAsync(id);

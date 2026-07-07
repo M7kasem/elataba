@@ -9,7 +9,8 @@ public enum UserRole
 {
     Buyer = 0,
     Seller = 1,
-    Admin = 2
+    Admin = 2,
+    StoreManager = 3
 }
 
 /// <summary>Lifecycle of an order. Kept minimal for the MVP.</summary>

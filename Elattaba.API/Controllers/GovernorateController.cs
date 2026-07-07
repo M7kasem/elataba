@@ -1,6 +1,8 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Governorates;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -31,6 +33,7 @@ public class GovernorateController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateGovernorateDto createGovernorateDto)
     {
         var result = await _governorateService.CreateAsync(createGovernorateDto);
@@ -46,6 +49,7 @@ public class GovernorateController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateGovernorateDto updateGovernorateDto)
     {
         var result = await _governorateService.UpdateAsync(id, updateGovernorateDto);
@@ -53,6 +57,7 @@ public class GovernorateController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _governorateService.DeleteAsync(id);

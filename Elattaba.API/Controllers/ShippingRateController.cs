@@ -1,7 +1,9 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.ShippingRates;
 using Elattba.Core.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -32,6 +34,7 @@ public class ShippingRateController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateShippingRateDto createShippingRateDto)
     {
         var result = await _shippingRateService.CreateAsync(createShippingRateDto);
@@ -47,6 +50,7 @@ public class ShippingRateController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateShippingRateDto updateShippingRateDto)
     {
         var result = await _shippingRateService.UpdateAsync(id, updateShippingRateDto);
@@ -54,6 +58,7 @@ public class ShippingRateController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _shippingRateService.DeleteAsync(id);

@@ -1,8 +1,10 @@
 using Elattaba.API.Helper;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Application.Products;
 using Elattba.Core.DTOs;
 using Elattba.Core.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Elattaba.API.Controllers;
@@ -35,6 +37,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Create([FromForm] CreateProductFormDto createProductDto)
     {
@@ -61,6 +64,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPost("create-with-offer")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> CreateWithOffer([FromForm] CreateProductWithOfferFormDto createProductDto)
     {
@@ -111,6 +115,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Update(int id, [FromForm] UpdateProductFormDto updateProductDto)
     {
@@ -136,6 +141,7 @@ public class ProductController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _productService.DeleteAsync(id);

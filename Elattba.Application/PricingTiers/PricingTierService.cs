@@ -1,4 +1,5 @@
 using ElAtaba.Domain.Entities;
+using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
@@ -8,10 +9,12 @@ namespace Elattba.Application.PricingTiers;
 public sealed class PricingTierService : IPricingTierService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService? _currentUserService;
 
-    public PricingTierService(IUnitOfWork unitOfWork)
+    public PricingTierService(IUnitOfWork unitOfWork, ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<PricingTierDto>>> GetAllAsync()
@@ -53,6 +56,12 @@ public sealed class PricingTierService : IPricingTierService
                 return new ServiceResult<PricingTierDto>(false, 404, "Product not found.");
             }
 
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             var tier = new PricingTier
             {
                 ProductId = dto.ProductId,
@@ -81,6 +90,18 @@ public sealed class PricingTierService : IPricingTierService
                 return new ServiceResult<PricingTierDto>(false, 404, "Pricing tier not found.");
             }
 
+            var product = await _unitOfWork.Products.GetByIdAsync(tier.ProductId);
+            if (product == null)
+            {
+                return new ServiceResult<PricingTierDto>(false, 404, "Product not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             tier.MinQuantity = dto.MinQuantity;
             tier.PricePerUnit = dto.PricePerUnit;
 
@@ -105,6 +126,18 @@ public sealed class PricingTierService : IPricingTierService
                 return new ServiceResult(false, 404, "Pricing tier not found.");
             }
 
+            var product = await _unitOfWork.Products.GetByIdAsync(tier.ProductId);
+            if (product == null)
+            {
+                return new ServiceResult(false, 404, "Product not found.");
+            }
+
+            var authorizationError = EnsureCanManageStore(product.StoreId);
+            if (authorizationError != null)
+            {
+                return authorizationError;
+            }
+
             await _unitOfWork.PricingTiers.DeleteAsync(id);
             await _unitOfWork.CompleteAsync();
 
@@ -118,4 +151,16 @@ public sealed class PricingTierService : IPricingTierService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    private ServiceResult<PricingTierDto>? EnsureCanManageStore(int storeId)
+    {
+        if (_currentUserService?.IsAuthenticated != true || _currentUserService.Role == AuthConstants.AdminRole)
+        {
+            return null;
+        }
+
+        return _currentUserService.StoreId == storeId
+            ? null
+            : new ServiceResult<PricingTierDto>(false, 403, "You are not allowed to manage pricing tiers for this store.");
+    }
 }
