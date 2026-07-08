@@ -5,14 +5,15 @@ namespace Elattaba.API.Extensions
         public static WebApplication UseApiMiddlewares(this WebApplication app)
         {
             app.UseExceptionHandler();
-            app.UseApiSecurityHeaders();
-            app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseApiSecurityHeaders();
+            app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
             if (!app.Environment.IsDevelopment())
             {
