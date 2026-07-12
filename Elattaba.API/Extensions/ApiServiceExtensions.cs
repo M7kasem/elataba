@@ -64,6 +64,7 @@ namespace Elattaba.API.Extensions
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IUserProvisioningService, UserProvisioningService>();
             services.AddScoped<ICarrierService, CarrierService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICheckoutService, CheckoutService>();
@@ -79,7 +80,6 @@ namespace Elattaba.API.Extensions
             services.AddScoped<IShippingRateService, ShippingRateService>();
             services.AddScoped<IStoreService, StoreService>();
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IPasswordHashingService, AspNetCorePasswordHashingService>();
             services.AddSingleton<IProductImageEmbeddingQueue, ChannelProductImageEmbeddingQueue>();
             services.AddHostedService<ProductImageEmbeddingBackgroundService>();
             services.AddApplicationValidation();

@@ -8,12 +8,10 @@ namespace Elattba.Application.Users;
 public sealed class UserService : IUserService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IPasswordHashingService _passwordHashingService;
 
-    public UserService(IUnitOfWork unitOfWork, IPasswordHashingService passwordHashingService)
+    public UserService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-        _passwordHashingService = passwordHashingService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<UserDto>>> GetAllAsync()
@@ -45,44 +43,6 @@ public sealed class UserService : IUserService
             }
 
             return new ServiceResult<UserDto>(true, 200, "User retrieved successfully", user.ToUserDto());
-        }
-        catch (Exception ex)
-        {
-            return Failure<UserDto>(ex);
-        }
-    }
-
-    public async Task<ServiceResult<UserDto>> CreateAsync(CreateUserDto dto)
-    {
-        try
-        {
-            var governorate = await _unitOfWork.Governorates.GetByIdAsync(dto.GovernorateId);
-            if (governorate == null)
-            {
-                return new ServiceResult<UserDto>(false, 404, "Governorate not found.");
-            }
-
-            if (await _unitOfWork.Users.AnyAsync(user => user.Email == dto.Email))
-            {
-                return new ServiceResult<UserDto>(false, 400, "Email is already registered.");
-            }
-
-            var user = new User
-            {
-                Email = dto.Email,
-                Phone = dto.Phone,
-                Role = dto.Role,
-                GovernorateId = dto.GovernorateId,
-                City = dto.City,
-                ShippingAddress = dto.ShippingAddress
-            };
-            user.PasswordHash = _passwordHashingService.HashPassword(user, dto.Password);
-
-            await _unitOfWork.Users.AddAsync(user);
-            await _unitOfWork.CompleteAsync();
-
-            user.Governorate = governorate;
-            return new ServiceResult<UserDto>(true, 201, "User created successfully", user.ToUserDto());
         }
         catch (Exception ex)
         {

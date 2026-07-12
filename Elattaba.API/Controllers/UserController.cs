@@ -1,6 +1,6 @@
 using Elattaba.API.Helper;
+using Elattaba.API.Services;
 using Elattba.Application.Auth;
-using Elattba.Application.Common;
 using Elattba.Application.Users;
 using Elattba.Core.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +13,14 @@ namespace Elattaba.API.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IUserProvisioningService _userProvisioningService;
 
-    public UserController(IUserService userService)
+    public UserController(
+        IUserService userService,
+        IUserProvisioningService userProvisioningService)
     {
         _userService = userService;
+        _userProvisioningService = userProvisioningService;
     }
 
     [HttpGet]
@@ -39,16 +43,16 @@ public class UserController : ControllerBase
     [Authorize(Policy = AuthConstants.AdminOnlyPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateUserDto createUserDto)
     {
-        var result = await _userService.CreateAsync(createUserDto);
-        if (result.Succeeded && result.StatusCode == 201 && result.Data != null)
+        var result = await _userProvisioningService.CreateByAdminAsync(createUserDto);
+        if (!result.Succeeded || result.Data == null)
         {
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = result.Data.UserId },
-                new ResponseAPI(result.StatusCode, result.Message, result.Data));
+            return this.ToActionResult(result);
         }
 
-        return this.ToActionResult(result);
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Data.UserId },
+            new ResponseAPI(result.StatusCode, result.Message, result.Data));
     }
 
     [HttpPut("{id}")]

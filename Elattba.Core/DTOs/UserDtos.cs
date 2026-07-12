@@ -16,6 +16,8 @@ public record UserDto(
 public record CreateUserDto(
     string Email,
     string Password,
+    string FirstName,
+    string LastName,
     string? Phone,
     UserRole Role,
     int GovernorateId,

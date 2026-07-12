@@ -1,7 +1,6 @@
-using ElAtaba.Domain.Entities;
 using Elattaba.API.Helper;
+using Elattaba.API.Services;
 using Elattba.Application.Auth;
-using Elattba.Application.Users;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
 using Elattba.InfraStructure.Identity;
@@ -15,20 +14,20 @@ namespace Elattaba.API.Controllers;
 [ApiController]
 public sealed class AccountController : ControllerBase
 {
-    private readonly IPasswordHashingService _passwordHashingService;
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserProvisioningService _userProvisioningService;
     private readonly UserManager<AppUser> _userManager;
 
     public AccountController(
+        IUserProvisioningService userProvisioningService,
         UserManager<AppUser> userManager,
         IUnitOfWork unitOfWork,
-        IPasswordHashingService passwordHashingService,
         ITokenService tokenService)
     {
+        _userProvisioningService = userProvisioningService;
         _userManager = userManager;
         _unitOfWork = unitOfWork;
-        _passwordHashingService = passwordHashingService;
         _tokenService = tokenService;
     }
 
@@ -36,64 +35,13 @@ public sealed class AccountController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        var governorate = await _unitOfWork.Governorates.GetByIdAsync(dto.GovernorateId);
-        if (governorate == null)
+        var result = await _userProvisioningService.RegisterAsync(dto);
+        if (!result.Succeeded || result.Data == null)
         {
-            return NotFound(new ResponseAPI(404, "Governorate not found."));
+            return this.ToActionResult(result);
         }
 
-        if (await _unitOfWork.Users.AnyAsync(user => user.Email == dto.Email) ||
-            await _userManager.FindByEmailAsync(dto.Email) != null)
-        {
-            return BadRequest(new ResponseAPI(400, "Email is already registered."));
-        }
-
-        var domainUser = new User
-        {
-            Email = dto.Email,
-            Phone = dto.Phone,
-            Role = dto.Role,
-            GovernorateId = dto.GovernorateId,
-            City = dto.City,
-            ShippingAddress = dto.ShippingAddress
-        };
-        domainUser.PasswordHash = _passwordHashingService.HashPassword(domainUser, dto.Password);
-
-        await _unitOfWork.Users.AddAsync(domainUser);
-        await _unitOfWork.CompleteAsync();
-
-        var appUser = new AppUser
-        {
-            UserName = dto.Email,
-            Email = dto.Email,
-            PhoneNumber = dto.Phone,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            DomainUserId = domainUser.UserId
-        };
-
-        var createResult = await _userManager.CreateAsync(appUser, dto.Password);
-        if (!createResult.Succeeded)
-        {
-            await _unitOfWork.Users.DeleteAsync(domainUser.UserId);
-            await _unitOfWork.CompleteAsync();
-
-            var message = string.Join(" ", createResult.Errors.Select(error => error.Description));
-            return BadRequest(new ResponseAPI(400, message));
-        }
-
-        var roleResult = await _userManager.AddToRoleAsync(appUser, dto.Role.ToString());
-        if (!roleResult.Succeeded)
-        {
-            await _userManager.DeleteAsync(appUser);
-            await _unitOfWork.Users.DeleteAsync(domainUser.UserId);
-            await _unitOfWork.CompleteAsync();
-
-            var message = string.Join(" ", roleResult.Errors.Select(error => error.Description));
-            return BadRequest(new ResponseAPI(400, message));
-        }
-
-        var response = await BuildAuthResponseAsync(appUser, dto.Role.ToString());
+        var response = result.Data;
         WriteJwtCookie(response.AccessToken, response.ExpiresAtUtc);
 
         return Ok(new ResponseAPI(200, "Registered successfully", response));

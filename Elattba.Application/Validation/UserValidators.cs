@@ -15,6 +15,8 @@ public sealed class CreateUserDtoValidator : AbstractValidator<CreateUserDto>
             user => user.City,
             user => user.ShippingAddress));
         RuleFor(user => user.Password).NotEmpty().MinimumLength(8);
+        RuleFor(user => user.FirstName).NotEmpty().MaximumLength(100);
+        RuleFor(user => user.LastName).NotEmpty().MaximumLength(100);
     }
 }
 
