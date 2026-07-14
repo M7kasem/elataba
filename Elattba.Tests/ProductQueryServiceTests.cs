@@ -77,6 +77,101 @@ public sealed class ProductQueryServiceTests
         Assert.Equal("Bravo", product.Name);
     }
 
+    [Fact]
+    public async Task GetBestDealsAsync_returns_unique_in_stock_products_using_best_active_offer()
+    {
+        var unitOfWork = SeedProducts();
+        var now = DateTime.UtcNow;
+        unitOfWork.ProductsRepo.Items.Single(product => product.ProductId == 4).StockQuantity = 0;
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 1,
+            StoreId = 1,
+            DiscountPercentage = 20,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(2),
+            AppliesToAllProducts = true
+        });
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 2,
+            StoreId = 1,
+            DiscountPercentage = 10,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(1),
+            OfferProducts = { new OfferProduct { OfferId = 2, ProductId = 1 } }
+        });
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 3,
+            StoreId = 1,
+            DiscountPercentage = 30,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(1),
+            OfferProducts = { new OfferProduct { OfferId = 3, ProductId = 2 } }
+        });
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 4,
+            StoreId = 1,
+            DiscountPercentage = 80,
+            StartDate = now.AddDays(-3),
+            EndDate = now.AddDays(-1),
+            AppliesToAllProducts = true
+        });
+        var service = NewService(unitOfWork);
+
+        var result = await service.GetBestDealsAsync(10);
+
+        Assert.True(result.Succeeded);
+        var deals = result.Data!;
+        Assert.Equal([2, 1, 3], deals.Select(product => product.ProductId));
+        Assert.Equal(deals.Count, deals.Select(product => product.ProductId).Distinct().Count());
+        Assert.DoesNotContain(deals, product => product.ProductId == 4);
+
+        var productWithCompetingOffers = deals.Single(product => product.ProductId == 1);
+        Assert.Equal(20, productWithCompetingOffers.DiscountPercentage);
+        Assert.Equal(160, productWithCompetingOffers.CurrentPrice);
+        Assert.Equal(now.AddDays(2), productWithCompetingOffers.OfferEndDate);
+    }
+
+    [Fact]
+    public async Task GetBestDealsAsync_caps_take_to_fifty()
+    {
+        var unitOfWork = new FakeUnitOfWork();
+        var now = DateTime.UtcNow;
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 1,
+            StoreId = 1,
+            DiscountPercentage = 10,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(1),
+            AppliesToAllProducts = true
+        });
+
+        for (var productId = 1; productId <= 60; productId++)
+        {
+            unitOfWork.ProductsRepo.Items.Add(new Product
+            {
+                ProductId = productId,
+                StoreId = 1,
+                CategoryId = 1,
+                Name = $"Product {productId:00}",
+                Description = "Deal product",
+                BasePrice = 100,
+                StockQuantity = 5
+            });
+        }
+
+        var service = NewService(unitOfWork);
+
+        var result = await service.GetBestDealsAsync(500);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(50, result.Data!.Count);
+    }
+
     private static FakeUnitOfWork SeedProducts()
     {
         var unitOfWork = new FakeUnitOfWork();

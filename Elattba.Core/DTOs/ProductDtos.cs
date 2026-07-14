@@ -18,6 +18,23 @@ public record ProductDto(
     IReadOnlyList<ProductImageDto> Images,
     IReadOnlyList<PricingTierDto> PricingTiers);
 
+public record BestDealProductDto(
+    int ProductId,
+    int StoreId,
+    string? StoreName,
+    int CategoryId,
+    string? CategoryName,
+    string Name,
+    string Description,
+    decimal OriginalPrice,
+    decimal CurrentPrice,
+    decimal DiscountPercentage,
+    DateTime OfferEndDate,
+    int StockQuantity,
+    DateTime CreatedAt,
+    IReadOnlyList<ProductImageDto> Images,
+    IReadOnlyList<PricingTierDto> PricingTiers);
+
 public record CreateProductDto(
     int StoreId,
     int CategoryId,

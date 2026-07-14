@@ -11,6 +11,9 @@ namespace Elattba.Application.Products;
 
 public sealed class ProductService : IProductService
 {
+    private const int DefaultBestDealsTake = 10;
+    private const int MaxBestDealsTake = 50;
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IImageEmbeddingService _imageEmbeddingService;
     private readonly IImageManagementService _imageManagementService;
@@ -46,6 +49,68 @@ public sealed class ProductService : IProductService
         catch (Exception ex)
         {
             return Failure<Pagination<ProductDto>>(ex);
+        }
+    }
+
+    public async Task<ServiceResult<IReadOnlyList<BestDealProductDto>>> GetBestDealsAsync(int take)
+    {
+        try
+        {
+            var normalizedTake = Math.Clamp(take <= 0 ? DefaultBestDealsTake : take, 1, MaxBestDealsTake);
+            var activeOffers = await GetActiveOffersAsync();
+            if (activeOffers.Count == 0)
+            {
+                return new ServiceResult<IReadOnlyList<BestDealProductDto>>(
+                    true,
+                    200,
+                    "Best deals retrieved successfully",
+                    []);
+            }
+
+            var storeWideStoreIds = activeOffers
+                .Where(offer => offer.AppliesToAllProducts)
+                .Select(offer => offer.StoreId)
+                .Distinct()
+                .ToList();
+
+            var productSpecificProductIds = activeOffers
+                .Where(offer => !offer.AppliesToAllProducts)
+                .SelectMany(offer => offer.OfferProducts.Select(offerProduct => offerProduct.ProductId))
+                .Distinct()
+                .ToList();
+
+            var products = await _unitOfWork.Products.ListAsync(
+                product => product.StockQuantity > 0 &&
+                    (storeWideStoreIds.Contains(product.StoreId) ||
+                     productSpecificProductIds.Contains(product.ProductId)),
+                true,
+                product => product.Store!,
+                product => product.Category!,
+                product => product.Images,
+                product => product.PricingTiers);
+
+            var deals = products
+                .Select(product => new
+                {
+                    Product = product,
+                    ActiveOffer = OfferPricingCalculator.FindBestActiveOffer(product, activeOffers)
+                })
+                .Where(item => item.ActiveOffer != null)
+                .OrderByDescending(item => item.ActiveOffer!.DiscountPercentage)
+                .ThenBy(item => item.ActiveOffer!.EndDate)
+                .Take(normalizedTake)
+                .Select(item => item.Product.ToBestDealProductDto(item.ActiveOffer!))
+                .ToList();
+
+            return new ServiceResult<IReadOnlyList<BestDealProductDto>>(
+                true,
+                200,
+                "Best deals retrieved successfully",
+                deals);
+        }
+        catch (Exception ex)
+        {
+            return Failure<IReadOnlyList<BestDealProductDto>>(ex);
         }
     }
 

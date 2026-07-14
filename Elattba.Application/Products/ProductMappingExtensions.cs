@@ -33,6 +33,30 @@ internal static class ProductMappingExtensions
             product.PricingTiers.Select(tier => tier.ToPricingTierDto()).ToList());
     }
 
+    public static BestDealProductDto ToBestDealProductDto(this Product product, Offer activeOffer)
+    {
+        var currentPrice = OfferPricingCalculator.CalculateDiscountedPrice(
+            product.BasePrice,
+            activeOffer.DiscountPercentage);
+
+        return new BestDealProductDto(
+            product.ProductId,
+            product.StoreId,
+            product.Store?.StoreName,
+            product.CategoryId,
+            product.Category?.Name,
+            product.Name,
+            product.Description,
+            product.BasePrice,
+            currentPrice,
+            activeOffer.DiscountPercentage,
+            activeOffer.EndDate,
+            product.StockQuantity,
+            product.CreatedAt,
+            product.Images.Select(image => image.ToProductImageDto()).ToList(),
+            product.PricingTiers.Select(tier => tier.ToPricingTierDto()).ToList());
+    }
+
     public static ProductImageDto ToProductImageDto(this ProductImage image) =>
         new(image.ImageId, image.ProductId, image.ImageUrl, image.IsPrimary, image.CreatedAt);
 

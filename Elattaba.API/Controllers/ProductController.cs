@@ -29,7 +29,14 @@ public class ProductController : ControllerBase
         return this.ToActionResult(result);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("best-deals")]
+    public async Task<IActionResult> GetBestDeals([FromQuery] int take = 10)
+    {
+        var result = await _productService.GetBestDealsAsync(take);
+        return this.ToActionResult(result);
+    }
+
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _productService.GetByIdAsync(id);
