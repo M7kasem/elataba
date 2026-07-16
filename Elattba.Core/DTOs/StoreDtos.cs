@@ -12,7 +12,9 @@ public record StoreDto(
     string Location,
     string Description,
     decimal Rating,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    IReadOnlyList<int>? ProductLineIds = null,
+    IReadOnlyList<string>? ProductLineNames = null);
 
 public record CreateStoreDto(
     int OwnerId,
@@ -20,11 +22,13 @@ public record CreateStoreDto(
     int CategoryId,
     string StoreName,
     string Location,
-    string Description);
+    string Description,
+    IReadOnlyList<int>? ProductLineIds = null);
 
 public record UpdateStoreDto(
     int? ManagerId,
     int CategoryId,
     string StoreName,
     string Location,
-    string Description);
+    string Description,
+    IReadOnlyList<int>? ProductLineIds = null);

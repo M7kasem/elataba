@@ -68,12 +68,10 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const AppContent: React.FC = () => {
   const { role, isAuthenticated } = useAuth();
-  const isAdminOrSellerDashboard = (window.location.pathname.startsWith('/seller') && role !== null) || (window.location.pathname.startsWith('/admin') && role === Role.Admin);
 
   return (
     <div className="app-container">
-      {/* Conditionally hide the standard navbar if inside the dashboard layout */}
-      {!isAdminOrSellerDashboard && <Navbar />}
+      <Navbar />
       
       <Routes>
         {/* Public Catalog Routes */}
@@ -124,6 +122,26 @@ const AppContent: React.FC = () => {
             <SellerDashboard />
           </SellerRoute>
         } />
+        <Route path="/seller/products" element={
+          <SellerRoute>
+            <SellerDashboard />
+          </SellerRoute>
+        } />
+        <Route path="/seller/offers" element={
+          <SellerRoute>
+            <SellerDashboard />
+          </SellerRoute>
+        } />
+        <Route path="/seller/orders" element={
+          <SellerRoute>
+            <SellerDashboard />
+          </SellerRoute>
+        } />
+        <Route path="/seller/settings" element={
+          <SellerRoute>
+            <SellerDashboard />
+          </SellerRoute>
+        } />
 
         {/* Admin Dashboard */}
         <Route path="/admin/dashboard" element={
@@ -139,23 +157,21 @@ const AppContent: React.FC = () => {
       {/* Floating Role Switcher Widget (Visible only in development and when logged in) */}
       {import.meta.env.DEV && isAuthenticated && <FloatingRoleSwitcher />}
 
-      {/* Simple Footer (Hidden in dashboards) */}
-      {!isAdminOrSellerDashboard && (
-        <footer style={{ 
-          padding: '2rem 4rem', 
-          backgroundColor: 'var(--bg-sidebar)', 
-          color: 'var(--text-light)', 
-          textAlign: 'center',
-          fontSize: '0.9rem',
-          borderTop: '1px solid var(--border-color)',
-          marginTop: 'auto'
-        }}>
-          <div>&copy; {new Date().getFullYear()} ElAtaba Wholesale Marketplace. All rights reserved.</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-            Built using React, Vite, and C# ASP.NET Core Backend Services.
-          </div>
-        </footer>
-      )}
+      {/* Simple Footer */}
+      <footer style={{ 
+        padding: '2rem 4rem', 
+        backgroundColor: 'var(--bg-sidebar)', 
+        color: 'var(--text-light)', 
+        textAlign: 'center',
+        fontSize: '0.9rem',
+        borderTop: '1px solid var(--border-color)',
+        marginTop: 'auto'
+      }}>
+        <div>&copy; {new Date().getFullYear()} ElAtaba Wholesale Marketplace. All rights reserved.</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+          Built using React, Vite, and C# ASP.NET Core Backend Services.
+        </div>
+      </footer>
     </div>
   );
 };

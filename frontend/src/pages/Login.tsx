@@ -28,7 +28,10 @@ const Login: React.FC = () => {
       showToast('Login successful! Welcome back.', 'success');
       
       // Determine redirection by user role
-      const userRole = response?.data?.role;
+      const apiRole = response?.data?.role;
+      const userRole = typeof apiRole === 'string'
+        ? Role[apiRole as keyof typeof Role]
+        : apiRole;
       const userStoreId = response?.data?.storeId;
 
       if (userRole === Role.Admin) {

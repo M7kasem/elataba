@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../api/client';
+import { toGovernorates } from '../api/normalizers';
 import { User, Governorate } from '../types';
 import { User as UserIcon, Mail, Phone, MapPin, CheckCircle, ShieldAlert } from 'lucide-react';
 
 const Profile: React.FC = () => {
-  const { user, fetchProfile, logout, role } = useAuth();
+  const { user, userId, email, fetchProfile, logout, role } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
@@ -30,7 +31,7 @@ const Profile: React.FC = () => {
           apiClient.get('/api/Governorate')
         ]);
         
-        setGovernorates(govsResponse.data?.data || []);
+        setGovernorates(toGovernorates(govsResponse.data?.data || []));
 
         if (profile) {
           setFirstName(profile.firstName);
@@ -55,17 +56,20 @@ const Profile: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      if (userId === null || email === null || role === null) {
+        throw new Error('Your session is incomplete. Please log in again.');
+      }
+
       const payload = {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        email,
         phone: phone.trim(),
+        role,
         governorateId: Number(governorateId),
         city: city.trim(),
         shippingAddress: shippingAddress.trim()
       };
 
-      // Backend PUT to update profile
-      await apiClient.put('/api/User/profile', payload);
+      await apiClient.put(`/api/User/${userId}`, payload);
       showToast('Profile updated successfully!', 'success');
       await fetchProfile(); // Reload
     } catch (err) {

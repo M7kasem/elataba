@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import apiClient from '../api/client';
+import { toOrders } from '../api/normalizers';
 import { Order, OrderStatus, PaymentStatus } from '../types';
 import { useToast } from '../context/ToastContext';
 import { Eye, Calendar, DollarSign, Package } from 'lucide-react';
@@ -18,7 +19,7 @@ const Orders: React.FC = () => {
       try {
         const response = await apiClient.get('/api/Order');
         // Response shape: { statusCode, message, data: OrderDto[] }
-        setOrders(response.data?.data || []);
+        setOrders(toOrders(response.data?.data || []));
       } catch (err) {
         console.error('Error fetching buyer orders:', err);
         showToast('Failed to load your orders.', 'error');

@@ -26,7 +26,8 @@ public sealed class StoreService : IStoreService
                 true,
                 store => store.Owner!,
                 store => store.Manager!,
-                store => store.Category!);
+                store => store.Category!,
+                store => store.ProductLines);
             var data = stores.Select(store => store.ToStoreDto()).ToList();
 
             return new ServiceResult<IReadOnlyList<StoreDto>>(true, 200, "Stores retrieved successfully", data);
@@ -88,6 +89,16 @@ public sealed class StoreService : IStoreService
                 return new ServiceResult<StoreDto>(false, 404, "Category not found.");
             }
 
+            var productLines = new List<Category>();
+            if (dto.ProductLineIds != null)
+            {
+                foreach (var catId in dto.ProductLineIds)
+                {
+                    var cat = await _unitOfWork.Categories.GetByIdAsync(catId);
+                    if (cat != null) productLines.Add(cat);
+                }
+            }
+
             var store = new Store
             {
                 OwnerId = dto.OwnerId,
@@ -95,7 +106,8 @@ public sealed class StoreService : IStoreService
                 CategoryId = dto.CategoryId,
                 StoreName = dto.StoreName,
                 Location = dto.Location,
-                Description = dto.Description
+                Description = dto.Description,
+                ProductLines = productLines
             };
 
             await _unitOfWork.Stores.AddAsync(store);
@@ -116,7 +128,7 @@ public sealed class StoreService : IStoreService
     {
         try
         {
-            var store = await _unitOfWork.Stores.GetByIdAsync(id);
+            var store = await GetStoreWithDetailsAsync(id, disableTracking: false);
             if (store == null)
             {
                 return new ServiceResult<StoreDto>(false, 404, "Store not found.");
@@ -145,6 +157,16 @@ public sealed class StoreService : IStoreService
             store.StoreName = dto.StoreName;
             store.Location = dto.Location;
             store.Description = dto.Description;
+
+            store.ProductLines.Clear();
+            if (dto.ProductLineIds != null)
+            {
+                foreach (var catId in dto.ProductLineIds)
+                {
+                    var cat = await _unitOfWork.Categories.GetByIdAsync(catId);
+                    if (cat != null) store.ProductLines.Add(cat);
+                }
+            }
 
             await _unitOfWork.Stores.UpdateAsync(store);
             await _unitOfWork.CompleteAsync();
@@ -201,7 +223,8 @@ public sealed class StoreService : IStoreService
             disableTracking,
             store => store.Owner!,
             store => store.Manager!,
-            store => store.Category!);
+            store => store.Category!,
+            store => store.ProductLines);
     }
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>

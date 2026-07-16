@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Role } from '../types';
 import { 
   LayoutDashboard, Package, Tag, ShoppingBag, 
@@ -8,12 +9,51 @@ import {
   Store, Cpu, LogOut, ArrowLeft 
 } from 'lucide-react';
 
+const copy = {
+  ar: {
+    backToCatalog: 'الرجوع للموقع الرئيسي',
+    logout: 'تسجيل الخروج',
+    dashboard: 'لوحة التحكم',
+    myProducts: 'المنتجات المعروضة',
+    offers: 'العروض والخصومات',
+    orders: 'طلبات الزباين',
+    messages: 'رسائل المشترين',
+    settings: 'إعدادات المحل',
+    adminHome: 'الرئيسية للمشرف',
+    users: 'إدارة المستخدمين',
+    stores: 'إدارة المحلات',
+    categories: 'إدارة التصنيفات',
+    shipping: 'مصاريف الشحن',
+    allOrders: 'كل الطلبيات',
+    ai: 'صيانة الذكاء الاصطناعي',
+  },
+  en: {
+    backToCatalog: 'Back to Catalog',
+    logout: 'Logout',
+    dashboard: 'Dashboard',
+    myProducts: 'My Products',
+    offers: 'Offers & Discounts',
+    orders: 'Store Orders',
+    messages: 'Buyer Messages',
+    settings: 'Store Settings',
+    adminHome: 'Admin Home',
+    users: 'Users Management',
+    stores: 'Stores Oversight',
+    categories: 'Categories CRUD',
+    shipping: 'Shipping Matrix',
+    allOrders: 'All Orders',
+    ai: 'AI Maintenance',
+  }
+};
+
 interface SidebarProps {
   type: 'seller' | 'admin';
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ type }) => {
   const { storeId, logout } = useAuth();
+  const { language } = useLanguage();
+  const labels = copy[language];
 
   const renderSellerLinks = () => (
     <>
@@ -23,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <LayoutDashboard size={20} />
-        <span>Dashboard</span>
+        <span>{labels.dashboard}</span>
       </NavLink>
 
       <NavLink 
@@ -31,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <Package size={20} />
-        <span>My Products</span>
+        <span>{labels.myProducts}</span>
       </NavLink>
 
       <NavLink 
@@ -39,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <Tag size={20} />
-        <span>Offers & Discounts</span>
+        <span>{labels.offers}</span>
       </NavLink>
 
       <NavLink 
@@ -47,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <ShoppingBag size={20} />
-        <span>Store Orders</span>
+        <span>{labels.orders}</span>
       </NavLink>
 
       <NavLink 
@@ -55,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <MessageSquare size={20} />
-        <span>Buyer Messages</span>
+        <span>{labels.messages}</span>
       </NavLink>
 
       {storeId && (
@@ -64,7 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
           className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
         >
           <Settings size={20} />
-          <span>Store Settings</span>
+          <span>{labels.settings}</span>
         </NavLink>
       )}
     </>
@@ -78,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <LayoutDashboard size={20} />
-        <span>Admin Home</span>
+        <span>{labels.adminHome}</span>
       </NavLink>
 
       <NavLink 
@@ -86,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <Users size={20} />
-        <span>Users Management</span>
+        <span>{labels.users}</span>
       </NavLink>
 
       <NavLink 
@@ -94,7 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <Store size={20} />
-        <span>Stores Oversight</span>
+        <span>{labels.stores}</span>
       </NavLink>
 
       <NavLink 
@@ -102,7 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <Layers size={20} />
-        <span>Categories CRUD</span>
+        <span>{labels.categories}</span>
       </NavLink>
 
       <NavLink 
@@ -110,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <Truck size={20} />
-        <span>Shipping Matrix</span>
+        <span>{labels.shipping}</span>
       </NavLink>
 
       <NavLink 
@@ -118,7 +158,7 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <ShoppingBag size={20} />
-        <span>All Orders</span>
+        <span>{labels.allOrders}</span>
       </NavLink>
 
       <NavLink 
@@ -126,51 +166,45 @@ const Sidebar: React.FC<SidebarProps> = ({ type }) => {
         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
       >
         <Cpu size={20} />
-        <span>AI Maintenance</span>
+        <span>{labels.ai}</span>
       </NavLink>
     </>
   );
 
   return (
     <div className="sidebar-container">
-      {/* Back to main catalog link */}
-      <NavLink 
-        to="/" 
-        className="sidebar-link" 
-        style={{ marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}
-      >
-        <ArrowLeft size={18} />
-        <span>Back to Catalog</span>
-      </NavLink>
-
-      <div className="sidebar-logo">
-        <span>⚡</span>
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          <span style={{ fontSize: '1.2rem', color: 'var(--primary)' }}>
-            {type === 'seller' ? 'Seller Panel' : 'Admin Panel'}
-          </span>
-          <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>ElAtaba Marketplace</span>
-        </div>
-      </div>
-
-      <div className="sidebar-menu">
+      <div className="sidebar-menu" style={{ marginTop: '1rem' }}>
         {type === 'seller' ? renderSellerLinks() : renderAdminLinks()}
       </div>
 
-      <button 
-        className="sidebar-link" 
+       <button 
+        onClick={logout}
         style={{ 
           marginTop: 'auto', 
-          background: 'none', 
-          border: 'none', 
-          color: 'rgba(255,255,255,0.6)', 
-          textAlign: 'left',
-          width: '100%'
+          background: 'rgba(230, 57, 70, 0.15)', 
+          border: '1px solid rgba(230, 57, 70, 0.3)', 
+          color: '#e63946', 
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          padding: '0.8rem 1rem',
+          borderRadius: 'var(--radius-md)',
+          fontWeight: 'bold',
+          cursor: 'pointer',
+          width: '100%',
+          transition: 'all 0.2s',
         }}
-        onClick={logout}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(230, 57, 70, 0.25)';
+          e.currentTarget.style.borderColor = 'rgba(230, 57, 70, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'rgba(230, 57, 70, 0.15)';
+          e.currentTarget.style.borderColor = 'rgba(230, 57, 70, 0.3)';
+        }}
       >
         <LogOut size={20} />
-        <span>Logout</span>
+        <span>{labels.logout}</span>
       </button>
     </div>
   );

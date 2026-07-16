@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient, { registerAuthCallbacks } from '../api/client';
 import { Role, User } from '../types';
+import { toUser } from '../api/normalizers';
 
 interface AuthContextType {
   token: string | null;
@@ -70,22 +71,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (): Promise<User> => {
     try {
-      const response = await apiClient.get('/api/User/profile');
+      const currentUserId = userId ?? Number(localStorage.getItem('elAtaba_userId'));
+      if (!currentUserId) {
+        throw new Error('No authenticated user ID is available.');
+      }
+
+      const response = await apiClient.get(`/api/User/${currentUserId}`);
       // Response shape: { statusCode, message, data: UserDto }
-      const userProfile = response.data?.data;
-      if (userProfile) {
-        setUser(userProfile);
-        setUserId(userProfile.userId);
-        setRole(userProfile.role);
-        setStoreId(userProfile.storeId || null);
-        
-        localStorage.setItem('elAtaba_userId', String(userProfile.userId));
-        localStorage.setItem('elAtaba_role', String(userProfile.role));
-        if (userProfile.storeId) {
-          localStorage.setItem('elAtaba_storeId', String(userProfile.storeId));
-        } else {
-          localStorage.removeItem('elAtaba_storeId');
-        }
+      const userProfile = response.data?.data
+        ? toUser(response.data.data, storeId)
+        : null;
+      if (!userProfile) {
+        throw new Error('The API returned no profile data.');
+      }
+
+      setUser(userProfile);
+      setUserId(userProfile.userId);
+      setRole(userProfile.role as Role);
+      setStoreId(userProfile.storeId || null);
+
+      localStorage.setItem('elAtaba_userId', String(userProfile.userId));
+      localStorage.setItem('elAtaba_role', String(userProfile.role));
+      if (userProfile.storeId) {
+        localStorage.setItem('elAtaba_storeId', String(userProfile.storeId));
+      } else {
+        localStorage.removeItem('elAtaba_storeId');
       }
       return userProfile;
     } catch (err) {
@@ -102,26 +112,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const authData = response.data?.data; // AuthResponseDto: Token, UserId, Email, Role, StoreId
       if (authData) {
-        const { token: jwt, userId: uId, email: uEmail, role: uRole, storeId: sId } = authData;
-
+        const { accessToken: jwt, userId: uId, email: uEmail, role: uRole, storeId: sId } = authData;
+        const normalizedRole = typeof uRole === 'string'
+          ? Role[uRole as keyof typeof Role]
+          : uRole as Role;
         setToken(jwt);
         setUserId(uId);
         setEmail(uEmail);
-        setRole(uRole);
+        setRole(normalizedRole);
         setStoreId(sId || null);
 
         localStorage.setItem('elAtaba_token', jwt);
         localStorage.setItem('elAtaba_userId', String(uId));
         localStorage.setItem('elAtaba_email', uEmail);
-        localStorage.setItem('elAtaba_role', String(uRole));
+        localStorage.setItem('elAtaba_role', String(normalizedRole));
         if (sId) {
           localStorage.setItem('elAtaba_storeId', String(sId));
         } else {
           localStorage.removeItem('elAtaba_storeId');
         }
 
-        // Fetch detailed profile immediately
-        await fetchProfile();
+        // The token change triggers fetchProfile after the new local state is available.
       }
       return response.data;
     } catch (err) {
@@ -134,24 +145,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await apiClient.post('/api/Account/register', formData);
       const authData = response.data?.data;
       if (authData) {
-        const { token: jwt, userId: uId, email: uEmail, role: uRole, storeId: sId } = authData;
+        const { accessToken: jwt, userId: uId, email: uEmail, role: uRole, storeId: sId } = authData;
+        const normalizedRole = typeof uRole === 'string'
+          ? Role[uRole as keyof typeof Role]
+          : uRole as Role;
 
         setToken(jwt);
         setUserId(uId);
         setEmail(uEmail);
-        setRole(uRole);
+        setRole(normalizedRole);
         setStoreId(sId || null);
 
         localStorage.setItem('elAtaba_token', jwt);
         localStorage.setItem('elAtaba_userId', String(uId));
         localStorage.setItem('elAtaba_email', uEmail);
-        localStorage.setItem('elAtaba_role', String(uRole));
+        localStorage.setItem('elAtaba_role', String(normalizedRole));
         if (sId) {
           localStorage.setItem('elAtaba_storeId', String(sId));
         }
 
-        // Fetch profile to complete state loading
-        await fetchProfile();
+        // The token change triggers fetchProfile after the new local state is available.
       }
       return response.data;
     } catch (err) {

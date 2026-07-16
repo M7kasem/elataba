@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../api/client';
+import { toCarriers, toCategories, toGovernorates, toShippingRates, toUser } from '../../api/normalizers';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { User, Category, Governorate, Carrier, ShippingRate, Role } from '../../types';
@@ -52,24 +53,24 @@ const AdminDashboard: React.FC = () => {
       try {
         const [usersRes, catsRes, govsRes, carriersRes, ratesRes] = await Promise.all([
           apiClient.get('/api/User').catch(() => ({ data: { data: [] } })),
-          apiClient.get('/api/Category'),
+          apiClient.get('/api/Category/GetAll'),
           apiClient.get('/api/Governorate'),
           apiClient.get('/api/Carrier').catch(() => ({ data: { data: [] } })),
           apiClient.get('/api/ShippingRate').catch(() => ({ data: { data: [] } }))
         ]);
 
-        setUsers(usersRes.data?.data || []);
-        setCategories(catsRes.data?.data || []);
+        setUsers((usersRes.data?.data || []).map((user: any) => toUser(user)));
+        setCategories(toCategories(catsRes.data?.data || []));
         
-        const govs = govsRes.data?.data || [];
+        const govs = toGovernorates(govsRes.data?.data || []);
         setGovernorates(govs);
         if (govs.length > 0) setRateGovId(govs[0].id);
 
-        const crrs = carriersRes.data?.data || [];
+        const crrs = toCarriers(carriersRes.data?.data || []);
         setCarriers(crrs);
         if (crrs.length > 0) setRateCarrierId(crrs[0].id);
 
-        setShippingRates(ratesRes.data?.data || []);
+        setShippingRates(toShippingRates(ratesRes.data?.data || []));
       } catch (err) {
         console.error('Error loading admin settings:', err);
         showToast('Error loading administrative lists.', 'error');
@@ -92,8 +93,8 @@ const AdminDashboard: React.FC = () => {
       });
       showToast('Category created successfully!', 'success');
       
-      const catsRes = await apiClient.get('/api/Category');
-      setCategories(catsRes.data?.data || []);
+      const catsRes = await apiClient.get('/api/Category/GetAll');
+      setCategories(toCategories(catsRes.data?.data || []));
       setShowCatModal(false);
       setCatName('');
       setCatDesc('');
@@ -118,14 +119,11 @@ const AdminDashboard: React.FC = () => {
     if (!govName.trim()) return;
 
     try {
-      await apiClient.post('/api/Governorate', {
-        name: govName.trim(),
-        shippingCost: Number(govCost)
-      });
+      await apiClient.post('/api/Governorate', { name: govName.trim() });
       showToast('Governorate created!', 'success');
       
       const govsRes = await apiClient.get('/api/Governorate');
-      setGovernorates(govsRes.data?.data || []);
+      setGovernorates(toGovernorates(govsRes.data?.data || []));
       setShowGovModal(false);
       setGovName('');
       setGovCost(15);
@@ -139,14 +137,11 @@ const AdminDashboard: React.FC = () => {
     if (!carrierName.trim()) return;
 
     try {
-      await apiClient.post('/api/Carrier', {
-        name: carrierName.trim(),
-        phone: carrierPhone.trim()
-      });
+      await apiClient.post('/api/Carrier', { name: carrierName.trim(), isActive: true });
       showToast('Carrier company created!', 'success');
       
       const carriersRes = await apiClient.get('/api/Carrier');
-      setCarriers(carriersRes.data?.data || []);
+      setCarriers(toCarriers(carriersRes.data?.data || []));
       setShowCarrierModal(false);
       setCarrierName('');
       setCarrierPhone('');
@@ -161,12 +156,12 @@ const AdminDashboard: React.FC = () => {
       await apiClient.post('/api/ShippingRate', {
         governorateId: Number(rateGovId),
         carrierId: Number(rateCarrierId),
-        rate: Number(rateAmount)
+        cost: Number(rateAmount)
       });
       showToast('Shipping rate breakpoint created!', 'success');
       
       const ratesRes = await apiClient.get('/api/ShippingRate');
-      setShippingRates(ratesRes.data?.data || []);
+      setShippingRates(toShippingRates(ratesRes.data?.data || []));
       setShowRateModal(false);
     } catch (err) {
       console.error('Create rate error:', err);
@@ -204,7 +199,7 @@ const AdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <div className="skeleton" style={{ width: '260px', height: '100vh' }} />
+        <div className="skeleton" style={{ width: '260px', height: 'calc(100vh - 78px)' }} />
         <div style={{ flex: 1, padding: '2rem' }}>
           <div className="skeleton" style={{ width: '30%', height: '40px', marginBottom: '2rem' }} />
           <div className="skeleton" style={{ width: '100%', height: '300px' }} />
@@ -216,12 +211,8 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="dashboard-layout">
       {/* Sidebar Navigation */}
-      <div style={{ width: '260px', flexShrink: 0 }}>
-        <div style={{ position: 'sticky', top: 0, height: '100vh' }}>
-          <div className="sidebar-container" style={{ height: '100%' }}>
-            <Sidebar type="admin" />
-          </div>
-        </div>
+      <div style={{ width: '260px', flexShrink: 0, height: 'calc(100vh - 78px)', position: 'sticky', top: '78px' }}>
+        <Sidebar type="admin" />
       </div>
 
       {/* Main Panel Content */}

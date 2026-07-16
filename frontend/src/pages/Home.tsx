@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import apiClient from '../api/client';
+import { toCategories, toGovernorates, toProducts } from '../api/normalizers';
 import { Product, Category, Governorate } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useLanguage } from '../context/LanguageContext';
@@ -66,10 +67,10 @@ const Home: React.FC = () => {
           apiClient.get('/api/Governorate')
         ]);
         
-        const fetchedProducts = prodResponse.data?.data || [];
+        const fetchedProducts = toProducts(prodResponse.data?.data?.data ?? []);
         setProducts(fetchedProducts);
-        setCategories(catResponse.data?.data || []);
-        setGovernorates(govResponse.data?.data || []);
+        setCategories(toCategories(catResponse.data?.data || []));
+        setGovernorates(toGovernorates(govResponse.data?.data || []));
         
         // Dynamic price filter threshold setting
         if (fetchedProducts.length > 0) {

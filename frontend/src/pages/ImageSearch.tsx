@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import apiClient from '../api/client';
+import { toProduct } from '../api/normalizers';
 import { Product } from '../types';
 import ImageSearchCropper from '../components/ImageSearchCropper';
 import ProductCard from '../components/ProductCard';
@@ -43,7 +44,10 @@ const ImageSearch: React.FC = () => {
       });
 
       // Response wrapper shape: { statusCode, message, data: MatchedProductDto[] }
-      const matchedData = response.data?.data || [];
+        const matchedData = (response.data?.data || []).map((result: any) => ({
+          ...result,
+          product: toProduct(result.product),
+        }));
       setResults(matchedData);
       
       if (matchedData.length > 0) {

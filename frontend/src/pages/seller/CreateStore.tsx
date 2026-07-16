@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import apiClient from '../../api/client';
+import { toCategories } from '../../api/normalizers';
 import { Category } from '../../types';
 import { Store, Layers, MapPin, AlignLeft, CheckCircle } from 'lucide-react';
 
@@ -24,8 +25,8 @@ const CreateStore: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await apiClient.get('/api/Category');
-        const catList = response.data?.data || [];
+        const response = await apiClient.get('/api/Category/GetAll');
+        const catList = toCategories(response.data?.data || []);
         setCategories(catList);
         if (catList.length > 0) {
           setCategoryId(catList[0].id);
@@ -61,13 +62,13 @@ const CreateStore: React.FC = () => {
       // Response wrapper shape: { statusCode, message, data: StoreDto }
       const newStore = response.data?.data;
       
-      if (newStore && newStore.id) {
-        updateUserStoreId(newStore.id);
+        if (newStore && newStore.storeId) {
+          updateUserStoreId(newStore.storeId);
         showToast('Store created successfully! Welcome to your dashboard.', 'success');
         navigate('/seller/dashboard');
       } else {
         // Fallback if structure is slightly different (e.g. key is storeId)
-        const storeId = newStore?.id || newStore?.storeId || 1;
+        const storeId = newStore?.storeId || 1;
         updateUserStoreId(storeId);
         showToast('Store setup completed.', 'success');
         navigate('/seller/dashboard');

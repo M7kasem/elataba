@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../api/client';
+import { toGovernorates } from '../api/normalizers';
 import { Role, Governorate } from '../types';
 import { UserPlus, Mail, Lock, Phone, MapPin, Briefcase } from 'lucide-react';
 
@@ -30,7 +31,7 @@ const Register: React.FC = () => {
     const fetchGovernorates = async () => {
       try {
         const response = await apiClient.get('/api/Governorate');
-        const govList = response.data?.data || [];
+        const govList = toGovernorates(response.data?.data || []);
         setGovernorates(govList);
         if (govList.length > 0) {
           setGovernorateId(govList[0].id);

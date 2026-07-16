@@ -565,15 +565,17 @@ body.arabic-ui h1, body.arabic-ui h2, body.arabic-ui h3, body.arabic-ui h4, body
   color: #023047;
 }
 
-/* Sidebar Dashboard Styles */
 .sidebar-container {
-  width: 260px;
+  width: 100%;
+  box-sizing: border-box;
   background-color: var(--bg-sidebar);
   color: var(--text-light);
   display: flex;
   flex-direction: column;
   padding: 1.5rem;
   box-shadow: var(--shadow-lg);
+  height: 100%;
+  min-height: 100vh;
 }
 
 .sidebar-logo {

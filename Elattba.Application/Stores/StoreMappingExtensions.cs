@@ -3,6 +3,8 @@ using Elattba.Core.DTOs;
 
 namespace Elattba.Application.Stores;
 
+using System.Linq;
+
 internal static class StoreMappingExtensions
 {
     public static StoreDto ToStoreDto(this Store store) =>
@@ -18,5 +20,7 @@ internal static class StoreMappingExtensions
             store.Location,
             store.Description,
             store.Rating,
-            store.CreatedAt);
+            store.CreatedAt,
+            store.ProductLines.Select(p => p.CategoryId).ToList(),
+            store.ProductLines.Select(p => p.Name).ToList());
 }

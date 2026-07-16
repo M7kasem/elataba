@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
+import { toProduct } from '../api/normalizers';
 import { Product, Role, Review } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -29,7 +30,7 @@ const ProductDetail: React.FC = () => {
           apiClient.get(`/api/Review/product/${id}`).catch(() => ({ data: { data: [] } }))
         ]);
 
-        const fetchedProduct = prodRes.data?.data;
+        const fetchedProduct = prodRes.data?.data ? toProduct(prodRes.data.data) : null;
         if (fetchedProduct) {
           setProduct(fetchedProduct);
           setReviews(reviewsRes.data?.data || []);

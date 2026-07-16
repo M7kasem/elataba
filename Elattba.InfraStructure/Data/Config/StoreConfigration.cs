@@ -1,4 +1,4 @@
-﻿using ElAtaba.Domain.Entities;
+using ElAtaba.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -25,6 +25,15 @@ namespace Elattba.InfraStructure.Data.Config
                  .HasForeignKey(s => s.CategoryId)
                  .OnDelete(DeleteBehavior.Restrict);
             builder.Property(s => s.Rating).HasPrecision(3, 2); // 0.00 - 5.00
+            
+            builder.HasMany(s => s.ProductLines)
+                 .WithMany(c => c.ProductLineStores)
+                 .UsingEntity<Dictionary<string, object>>(
+                     "StoreProductLine",
+                     j => j.HasOne<Category>().WithMany().HasForeignKey("CategoryId"),
+                     j => j.HasOne<Store>().WithMany().HasForeignKey("StoreId"),
+                     j => j.ToTable("StoreProductLines")
+                 );
             builder.HasIndex(s => s.OwnerId).IsUnique();
             builder.ToTable(table =>
             {

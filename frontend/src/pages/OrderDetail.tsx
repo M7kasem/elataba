@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import apiClient from '../api/client';
+import { toOrder } from '../api/normalizers';
 import { Order, OrderStatus, PaymentStatus, PaymentMethod } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -27,7 +28,7 @@ const OrderDetail: React.FC = () => {
       setLoading(true);
       try {
         const response = await apiClient.get(`/api/Order/${id}`);
-        const fetchedOrder = response.data?.data;
+        const fetchedOrder = response.data?.data ? toOrder(response.data.data) : null;
         if (fetchedOrder) {
           setOrder(fetchedOrder);
           setHasReviewed(fetchedOrder.isReviewed || false);

@@ -4,6 +4,8 @@ import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Send, MessageCircle, User, Store, Package } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
+import { Role } from '../types';
 
 interface LocalMessage {
   id: string;
@@ -41,11 +43,13 @@ const Messages: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom of chat
+  // Scroll to bottom of chat locally to prevent window jumping
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -225,9 +229,9 @@ const Messages: React.FC = () => {
 
   const activeThread = activeThreadIdx !== null ? threads[activeThreadIdx] : null;
 
-  return (
-    <div className="main-content" style={{ padding: '2rem 4rem' }}>
-      <h1 style={{ fontSize: '2.2rem', marginBottom: '2rem' }}>Messages (الرسائل)</h1>
+  const renderMessagesContent = () => (
+    <div style={{ padding: '1rem' }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--secondary)', marginBottom: '1.5rem' }}>Messages (الرسائل)</h1>
 
       <div className="card" style={{ padding: 0, display: 'flex', height: '650px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
         {/* Sidebar: Threads List */}
@@ -245,10 +249,12 @@ const Messages: React.FC = () => {
                   padding: '1rem',
                   border: 'none',
                   borderBottom: '1px solid var(--border-color)',
-                  backgroundColor: activeThreadIdx === idx ? 'var(--bg-card)' : 'transparent',
+                  borderLeft: activeThreadIdx === idx && language !== 'ar' ? '4px solid var(--primary)' : '4px solid transparent',
+                  borderRight: activeThreadIdx === idx && language === 'ar' ? '4px solid var(--primary)' : '4px solid transparent',
+                  backgroundColor: activeThreadIdx === idx ? 'rgba(255, 183, 3, 0.12)' : 'transparent',
                   cursor: 'pointer',
                   width: '100%',
-                  textAlign: 'left',
+                  textAlign: language === 'ar' ? 'right' : 'left',
                   color: 'var(--text-main)',
                   transition: 'background-color 0.2s'
                 }}
@@ -279,7 +285,14 @@ const Messages: React.FC = () => {
         {activeThread ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-card)' }}>
             {/* Chat Header */}
-            <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ 
+              padding: '1rem 1.5rem', 
+              borderBottom: '1px solid var(--border-color)', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              backgroundColor: 'rgba(255, 183, 3, 0.12)'
+            }}>
               <div>
                 <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{activeThread.partyName}</h3>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeThread.partyEmail}</span>
@@ -287,7 +300,10 @@ const Messages: React.FC = () => {
             </div>
 
             {/* Message History Area */}
-            <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div 
+              ref={chatContainerRef}
+              style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+            >
               {activeThread.messages.map((msg, index) => {
                 const isMe = msg.senderId === userId;
                 return (
@@ -337,7 +353,6 @@ const Messages: React.FC = () => {
                   </div>
                 );
               })}
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Input Form Footer */}
@@ -370,6 +385,38 @@ const Messages: React.FC = () => {
           </div>
         )}
       </div>
+    </div>
+  );
+
+  if (role === Role.Seller || role === Role.StoreManager) {
+    return (
+      <div className="dashboard-layout">
+        <div style={{ width: '260px', flexShrink: 0, height: 'calc(100vh - 78px)', position: 'sticky', top: '78px' }}>
+          <Sidebar type="seller" />
+        </div>
+        <div style={{ flex: 1, padding: '2rem', overflowX: 'hidden' }}>
+          {renderMessagesContent()}
+        </div>
+      </div>
+    );
+  }
+
+  if (role === Role.Admin) {
+    return (
+      <div className="dashboard-layout">
+        <div style={{ width: '260px', flexShrink: 0, height: 'calc(100vh - 78px)', position: 'sticky', top: '78px' }}>
+          <Sidebar type="admin" />
+        </div>
+        <div style={{ flex: 1, padding: '2rem', overflowX: 'hidden' }}>
+          {renderMessagesContent()}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="main-content" style={{ padding: '2rem 4rem' }}>
+      {renderMessagesContent()}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import apiClient from '../api/client';
+import { toGovernorates } from '../api/normalizers';
 import { Governorate } from '../types';
 import { Trash2, ArrowRight, Store, MapPin } from 'lucide-react';
 
@@ -21,7 +22,7 @@ const Cart: React.FC = () => {
     const fetchGovernorates = async () => {
       try {
         const response = await apiClient.get('/api/Governorate');
-        const govList = response.data?.data || [];
+        const govList = toGovernorates(response.data?.data || []);
         setGovernorates(govList);
         
         // Find selected governorate rate if any
