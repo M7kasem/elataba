@@ -2,16 +2,12 @@ using ElAtaba.Domain.Enums;
 
 namespace ElAtaba.Domain.Entities;
 
-/// <summary>
-/// Every platform user - buyers and sellers share this single table.
-/// </summary>
 public class User
 {
     public int UserId { get; set; }
 
     public string Email { get; set; } = string.Empty;
 
-    /// <summary>Optional - messaging exists on the platform, so a phone number isn't required.</summary>
     public string? Phone { get; set; }
 
     public UserRole Role { get; set; } = UserRole.Buyer;

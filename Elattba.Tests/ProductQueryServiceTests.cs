@@ -78,11 +78,46 @@ public sealed class ProductQueryServiceTests
     }
 
     [Fact]
-    public async Task GetBestDealsAsync_returns_unique_in_stock_products_using_best_active_offer()
+    public async Task GetBestDealsAsync_excludes_expired_offers_and_out_of_stock_products()
     {
         var unitOfWork = SeedProducts();
         var now = DateTime.UtcNow;
-        unitOfWork.ProductsRepo.Items.Single(product => product.ProductId == 4).StockQuantity = 0;
+        unitOfWork.ProductsRepo.Items.Single(product => product.ProductId == 2).StockQuantity = 0;
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 1,
+            StoreId = 1,
+            DiscountPercentage = 15,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(2),
+            OfferProducts = { new OfferProduct { OfferId = 1, ProductId = 1 } }
+        });
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 2,
+            StoreId = 1,
+            DiscountPercentage = 80,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(-1),
+            AppliesToAllProducts = true
+        });
+
+        var service = NewService(unitOfWork);
+
+        var result = await service.GetBestDealsAsync(10);
+
+        Assert.True(result.Succeeded);
+        var deals = result.Data!;
+        Assert.Equal([1], deals.Select(product => product.ProductId));
+        Assert.DoesNotContain(deals, product => product.ProductId == 2);
+        Assert.DoesNotContain(deals, product => product.ProductId == 3);
+    }
+
+    [Fact]
+    public async Task GetBestDealsAsync_uses_best_active_offer_for_price_and_end_date()
+    {
+        var unitOfWork = SeedProducts();
+        var now = DateTime.UtcNow;
         unitOfWork.OffersRepo.Items.Add(new Offer
         {
             OfferId = 1,
@@ -96,7 +131,42 @@ public sealed class ProductQueryServiceTests
         {
             OfferId = 2,
             StoreId = 1,
-            DiscountPercentage = 10,
+            DiscountPercentage = 30,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(1),
+            OfferProducts = { new OfferProduct { OfferId = 2, ProductId = 1 } }
+        });
+        var service = NewService(unitOfWork);
+
+        var result = await service.GetBestDealsAsync(10);
+
+        Assert.True(result.Succeeded);
+        var deals = result.Data!;
+        var productWithCompetingOffers = Assert.Single(deals, product => product.ProductId == 1);
+        Assert.Equal(30, productWithCompetingOffers.DiscountPercentage);
+        Assert.Equal(140, productWithCompetingOffers.CurrentPrice);
+        Assert.Equal(now.AddDays(1), productWithCompetingOffers.OfferEndDate);
+    }
+
+    [Fact]
+    public async Task GetBestDealsAsync_does_not_duplicate_products_when_storewide_and_specific_offers_overlap()
+    {
+        var unitOfWork = SeedProducts();
+        var now = DateTime.UtcNow;
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 1,
+            StoreId = 1,
+            DiscountPercentage = 20,
+            StartDate = now.AddDays(-1),
+            EndDate = now.AddDays(2),
+            AppliesToAllProducts = true
+        });
+        unitOfWork.OffersRepo.Items.Add(new Offer
+        {
+            OfferId = 2,
+            StoreId = 1,
+            DiscountPercentage = 35,
             StartDate = now.AddDays(-1),
             EndDate = now.AddDays(1),
             OfferProducts = { new OfferProduct { OfferId = 2, ProductId = 1 } }
@@ -105,11 +175,12 @@ public sealed class ProductQueryServiceTests
         {
             OfferId = 3,
             StoreId = 1,
-            DiscountPercentage = 30,
+            DiscountPercentage = 15,
             StartDate = now.AddDays(-1),
             EndDate = now.AddDays(1),
             OfferProducts = { new OfferProduct { OfferId = 3, ProductId = 2 } }
         });
+
         unitOfWork.OffersRepo.Items.Add(new Offer
         {
             OfferId = 4,
@@ -125,14 +196,11 @@ public sealed class ProductQueryServiceTests
 
         Assert.True(result.Succeeded);
         var deals = result.Data!;
-        Assert.Equal([2, 1, 3], deals.Select(product => product.ProductId));
         Assert.Equal(deals.Count, deals.Select(product => product.ProductId).Distinct().Count());
-        Assert.DoesNotContain(deals, product => product.ProductId == 4);
-
-        var productWithCompetingOffers = deals.Single(product => product.ProductId == 1);
-        Assert.Equal(20, productWithCompetingOffers.DiscountPercentage);
-        Assert.Equal(160, productWithCompetingOffers.CurrentPrice);
-        Assert.Equal(now.AddDays(2), productWithCompetingOffers.OfferEndDate);
+        Assert.Equal([1, 2, 3, 4], deals.Select(product => product.ProductId).OrderBy(productId => productId));
+        var productWithOverlap = Assert.Single(deals, product => product.ProductId == 1);
+        Assert.Equal(35, productWithOverlap.DiscountPercentage);
+        Assert.DoesNotContain(deals, product => product.DiscountPercentage == 80);
     }
 
     [Fact]

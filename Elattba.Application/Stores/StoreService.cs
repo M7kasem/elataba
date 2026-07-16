@@ -23,24 +23,24 @@ public sealed class StoreService : IStoreService
         _currentUserService = currentUserService;
     }
 
-    public async Task<ServiceResult<IReadOnlyList<StoreDto>>> GetAllAsync()
+    public async Task<ServiceResult<Pagination<StoreDto>>> GetAllAsync(StoreParams storeParams)
     {
         try
         {
-            var stores = await _unitOfWork.Stores.ListAsync(
-                null,
-                true,
-                store => store.Owner!,
-                store => store.Manager!,
-                store => store.Category!,
-                store => store.ProductLines);
-            var data = stores.Select(store => store.ToStoreDto()).ToList();
+            var pagedStores = await _unitOfWork.Stores.GetPagedAsync(storeParams);
+            
+            var data = pagedStores.Items.Select(store => store.ToStoreDto()).ToList();
+            var pagination = new Pagination<StoreDto>(
+                pagedStores.PageNumber,
+                pagedStores.PageSize,
+                pagedStores.Count,
+                data);
 
-            return new ServiceResult<IReadOnlyList<StoreDto>>(true, 200, "Stores retrieved successfully", data);
+            return new ServiceResult<Pagination<StoreDto>>(true, 200, "Stores retrieved successfully", pagination);
         }
         catch (Exception ex)
         {
-            return Failure<IReadOnlyList<StoreDto>>(ex);
+            return Failure<Pagination<StoreDto>>(ex);
         }
     }
 

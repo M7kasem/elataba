@@ -5,7 +5,7 @@ namespace Elattba.Application.Stores;
 
 public interface IStoreService
 {
-    Task<ServiceResult<IReadOnlyList<StoreDto>>> GetAllAsync();
+    Task<ServiceResult<Pagination<StoreDto>>> GetAllAsync(StoreParams storeParams);
     Task<ServiceResult<StoreDto>> GetByIdAsync(int id);
     Task<ServiceResult<StoreDto>> CreateAsync(CreateStoreDto dto);
     Task<ServiceResult<StoreDto>> UpdateAsync(int id, UpdateStoreDto dto);

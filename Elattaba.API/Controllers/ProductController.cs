@@ -222,4 +222,11 @@ public class ProductController : ControllerBase
         public IFormFile? Image { get; init; }
         public int TopK { get; init; }
     }
+    [HttpGet("count")]
+    public async Task<IActionResult> GetTotalCount()
+    {
+        var result = await _productService.GetTotalProductsCountAsync();
+        return this.ToActionResult(result);
+    }
+
 }
