@@ -20,9 +20,9 @@ public class StoreController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] StoreParams storeParams)
     {
-        var result = await _storeService.GetAllAsync();
+        var result = await _storeService.GetAllAsync(storeParams);
         return this.ToActionResult(result);
     }
 

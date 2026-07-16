@@ -150,7 +150,45 @@ internal class FakeRepository<T> : IGenericRepository<T> where T : class
 }
 
 internal sealed class FakeUserRepository : FakeRepository<User>, IUserRepository;
-internal sealed class FakeStoreRepository : FakeRepository<Store>, IStoreRepository;
+internal sealed class FakeStoreRepository : FakeRepository<Store>, IStoreRepository
+{
+    public Task<PagedList<Store>> GetPagedAsync(StoreParams storeParams)
+    {
+        IEnumerable<Store> query = Items;
+
+        if (!string.IsNullOrWhiteSpace(storeParams.Search))
+        {
+            var search = storeParams.Search.ToLower();
+            query = query.Where(s =>
+                s.StoreName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                s.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (storeParams.CategoryId.HasValue)
+        {
+            query = query.Where(s => s.CategoryId == storeParams.CategoryId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(storeParams.Location))
+        {
+            var location = storeParams.Location.ToLower();
+            query = query.Where(s => s.Location.Contains(location, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var count = query.Count();
+        var items = query
+            .OrderBy(s => s.StoreName)
+            .Skip((storeParams.PageNumber - 1) * storeParams.PageSize)
+            .Take(storeParams.PageSize)
+            .ToList();
+
+        return Task.FromResult(new PagedList<Store>(
+            storeParams.PageNumber,
+            storeParams.PageSize,
+            count,
+            items));
+    }
+}
 internal sealed class FakeGovernorateRepository : FakeRepository<Governorate>, IGovernorateRepository;
 internal sealed class FakeCategoryRepository : FakeRepository<Category>, ICategoryRepository;
 internal sealed class FakeProductRepository : FakeRepository<Product>, IProductRepository
