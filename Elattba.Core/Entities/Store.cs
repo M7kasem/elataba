@@ -38,4 +38,5 @@ public class Store
     public ICollection<Offer> Offers { get; set; } = new List<Offer>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    public ICollection<Category> ProductLines { get; set; } = new List<Category>();
 }

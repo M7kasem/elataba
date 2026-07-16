@@ -67,27 +67,7 @@ public sealed class ProductService : IProductService
                     []);
             }
 
-            var storeWideStoreIds = activeOffers
-                .Where(offer => offer.AppliesToAllProducts)
-                .Select(offer => offer.StoreId)
-                .Distinct()
-                .ToList();
-
-            var productSpecificProductIds = activeOffers
-                .Where(offer => !offer.AppliesToAllProducts)
-                .SelectMany(offer => offer.OfferProducts.Select(offerProduct => offerProduct.ProductId))
-                .Distinct()
-                .ToList();
-
-            var products = await _unitOfWork.Products.ListAsync(
-                product => product.StockQuantity > 0 &&
-                    (storeWideStoreIds.Contains(product.StoreId) ||
-                     productSpecificProductIds.Contains(product.ProductId)),
-                true,
-                product => product.Store!,
-                product => product.Category!,
-                product => product.Images,
-                product => product.PricingTiers);
+            var products = await GetBestDealCandidateProductsAsync(activeOffers);
 
             var deals = products
                 .Select(product => new
@@ -130,6 +110,19 @@ public sealed class ProductService : IProductService
         catch (Exception ex)
         {
             return Failure<ProductDto>(ex);
+        }
+    }
+
+    public async Task<ServiceResult<int>> GetTotalProductsCountAsync()
+    {
+        try
+        {
+            var count = await _unitOfWork.Products.CountAsync();
+            return new ServiceResult<int>(true, 200, "Products count retrieved successfully", count);
+        }
+        catch (Exception ex)
+        {
+            return Failure<int>(ex);
         }
     }
 
@@ -536,6 +529,29 @@ public sealed class ProductService : IProductService
             offer => offer.StartDate <= now && offer.EndDate >= now,
             true,
             offer => offer.OfferProducts);
+    }
+
+    private async Task<IReadOnlyList<Product>> GetBestDealCandidateProductsAsync(IReadOnlyList<Offer> activeOffers)
+    {
+        var storeWideStoreIds = activeOffers
+            .Where(offer => offer.AppliesToAllProducts)
+            .Select(offer => offer.StoreId)
+            .ToHashSet();
+
+        var productSpecificProductIds = activeOffers
+            .Where(offer => !offer.AppliesToAllProducts)
+            .SelectMany(offer => offer.OfferProducts.Select(offerProduct => offerProduct.ProductId))
+            .ToHashSet();
+
+        return await _unitOfWork.Products.ListAsync(
+            product => product.StockQuantity > 0 &&
+                (storeWideStoreIds.Contains(product.StoreId) ||
+                 productSpecificProductIds.Contains(product.ProductId)),
+            true,
+            product => product.Store!,
+            product => product.Category!,
+            product => product.Images,
+            product => product.PricingTiers);
     }
 
     private static ServiceResult<ProductDto>? ValidateProductImageFiles(IReadOnlyList<ImageUploadFile>? images, int primaryImageIndex)

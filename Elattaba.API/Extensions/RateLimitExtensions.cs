@@ -15,7 +15,7 @@ namespace Elattaba.API.Extensions
                         partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 8,
+                            PermitLimit = 150       ,
                             Window = TimeSpan.FromMinutes(1),
                             QueueLimit = 0,
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,

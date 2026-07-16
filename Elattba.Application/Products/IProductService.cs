@@ -14,6 +14,8 @@ public interface IProductService
     Task<ServiceResult<IReadOnlyList<ProductImageSearchResultDto>>> SearchByImageAsync(SearchProductsByImageCommand command);
     Task<ServiceResult<ProductDto>> UpdateAsync(int id, UpdateProductCommand command);
     Task<ServiceResult> DeleteAsync(int id);
+    Task<ServiceResult<int>> GetTotalProductsCountAsync();
+
 }
 
 public sealed record CreateProductCommand(

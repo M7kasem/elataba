@@ -104,5 +104,9 @@ namespace Elattba.InfraStructure.Repository
             return query;
         }
 
+        public Task<int> CountAsync()
+        {
+            return _context.Set<T>().CountAsync();
+        }
     }
 }

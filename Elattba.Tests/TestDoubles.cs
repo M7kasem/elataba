@@ -96,6 +96,8 @@ internal class FakeRepository<T> : IGenericRepository<T> where T : class
     public Task<bool> AnyAsync(Expression<Func<T, bool>> predicate) =>
         Task.FromResult(Items.Any(predicate.Compile()));
 
+    public Task<int> CountAsync() => Task.FromResult(Items.Count);
+
     public Task<T?> GetByIdAsync(int id) => Task.FromResult(Items.FirstOrDefault(item => GetId(item) == id));
 
     public Task<T?> GetByIdAsync(int id, params Expression<Func<T, object>>[] includes) => GetByIdAsync(id);

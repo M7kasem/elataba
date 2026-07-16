@@ -12,4 +12,5 @@ public class Category
 
     public ICollection<Store> Stores { get; set; } = new List<Store>();
     public ICollection<Product> Products { get; set; } = new HashSet<Product>();
+    public ICollection<Store> ProductLineStores { get; set; } = new List<Store>();
 }

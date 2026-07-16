@@ -591,6 +591,21 @@ namespace Elattba.InfraStructure.Data.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("StoreProductLine", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CategoryId", "StoreId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("StoreProductLines", (string)null);
+                });
+
             modelBuilder.Entity("ElAtaba.Domain.Entities.Message", b =>
                 {
                     b.HasOne("ElAtaba.Domain.Entities.Product", "Product")
@@ -814,6 +829,21 @@ namespace Elattba.InfraStructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Governorate");
+                });
+
+            modelBuilder.Entity("StoreProductLine", b =>
+                {
+                    b.HasOne("ElAtaba.Domain.Entities.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ElAtaba.Domain.Entities.Store", null)
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ElAtaba.Domain.Entities.Carrier", b =>
