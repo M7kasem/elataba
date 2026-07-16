@@ -10,4 +10,5 @@ public interface IStoreService
     Task<ServiceResult<StoreDto>> CreateAsync(CreateStoreDto dto);
     Task<ServiceResult<StoreDto>> UpdateAsync(int id, UpdateStoreDto dto);
     Task<ServiceResult> DeleteAsync(int id);
+    Task<ServiceResult<string>> UploadLogoAsync(int storeId, Elattba.Core.Services.ImageUploadFile file);
 }

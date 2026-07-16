@@ -11,7 +11,10 @@ public record UserDto(
     string? GovernorateName,
     string City,
     string ShippingAddress,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string FirstName = "",
+    string LastName = "",
+    string? ProfilePictureUrl = null);
 
 public record CreateUserDto(
     string Email,
@@ -30,4 +33,6 @@ public record UpdateUserDto(
     UserRole Role,
     int GovernorateId,
     string City,
-    string ShippingAddress);
+    string ShippingAddress,
+    string FirstName = "",
+    string LastName = "");

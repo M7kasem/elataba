@@ -2,16 +2,21 @@ using ElAtaba.Domain.Entities;
 using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
+using Elattba.Core.Services;
 
 namespace Elattba.Application.Users;
 
 public sealed class UserService : IUserService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IImageManagementService _imageManagementService;
 
-    public UserService(IUnitOfWork unitOfWork)
+    public UserService(
+        IUnitOfWork unitOfWork,
+        IImageManagementService imageManagementService)
     {
         _unitOfWork = unitOfWork;
+        _imageManagementService = imageManagementService;
     }
 
     public async Task<ServiceResult<IReadOnlyList<UserDto>>> GetAllAsync()
@@ -121,4 +126,33 @@ public sealed class UserService : IUserService
 
     private static ServiceResult<T> Failure<T>(Exception ex) =>
         new(false, 500, "Unexpected server error.");
+
+    public async Task<ServiceResult<string>> UploadProfilePictureAsync(int userId, ImageUploadFile file)
+    {
+        try
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return new ServiceResult<string>(false, 404, "User not found.");
+            }
+
+            if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+            {
+                _imageManagementService.DeleteImage(user.ProfilePictureUrl);
+            }
+
+            var imageUrl = await _imageManagementService.AddImageAsync(file, "users");
+
+            user.ProfilePictureUrl = imageUrl;
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.CompleteAsync();
+
+            return new ServiceResult<string>(true, 200, "Profile picture uploaded successfully.", imageUrl);
+        }
+        catch (Exception ex)
+        {
+            return Failure<string>(ex);
+        }
+    }
 }

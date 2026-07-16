@@ -2,10 +2,10 @@ namespace Elattba.Core.DTOs;
 
 public sealed class ProductParams
 {
-    public const int MaxPageSize = 6;
+    public const int MaxPageSize = 50;
 
     private int _pageNumber = 1;
-    private int _pageSize = 3;
+    private int _pageSize = 20;
 
     public int PageNumber
     {
@@ -17,7 +17,7 @@ public sealed class ProductParams
     {
         get => _pageSize;
         set => _pageSize = value <= 0
-            ? 3
+            ? 20
             : Math.Min(value, MaxPageSize);
     }
 

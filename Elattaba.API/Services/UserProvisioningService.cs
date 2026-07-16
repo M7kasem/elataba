@@ -103,7 +103,9 @@ public sealed class UserProvisioningService : IUserProvisioningService
             governorate.Name,
             user.City,
             user.ShippingAddress,
-            user.CreatedAt);
+            user.CreatedAt,
+            result.Data.AppUser.FirstName,
+            result.Data.AppUser.LastName);
 
         return new ServiceResult<UserDto>(true, 201, "User created successfully", userDto);
     }

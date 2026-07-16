@@ -3,17 +3,23 @@ using Elattba.Application.Auth;
 using Elattba.Application.Common;
 using Elattba.Core.DTOs;
 using Elattba.Core.InterFaces;
+using Elattba.Core.Services;
 
 namespace Elattba.Application.Stores;
 
 public sealed class StoreService : IStoreService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IImageManagementService _imageManagementService;
     private readonly ICurrentUserService? _currentUserService;
 
-    public StoreService(IUnitOfWork unitOfWork, ICurrentUserService? currentUserService = null)
+    public StoreService(
+        IUnitOfWork unitOfWork, 
+        IImageManagementService imageManagementService,
+        ICurrentUserService? currentUserService = null)
     {
         _unitOfWork = unitOfWork;
+        _imageManagementService = imageManagementService;
         _currentUserService = currentUserService;
     }
 
@@ -254,5 +260,40 @@ public sealed class StoreService : IStoreService
                _currentUserService.StoreId == store.StoreId
             ? null
             : new ServiceResult<StoreDto>(false, 403, "You are not allowed to manage this store.");
+    }
+
+    public async Task<ServiceResult<string>> UploadLogoAsync(int storeId, ImageUploadFile file)
+    {
+        try
+        {
+            var store = await _unitOfWork.Stores.GetByIdAsync(storeId);
+            if (store == null)
+            {
+                return new ServiceResult<string>(false, 404, "Store not found.");
+            }
+
+            var storeAuthorizationError = EnsureCanManageStore(store);
+            if (storeAuthorizationError != null)
+            {
+                return new ServiceResult<string>(false, storeAuthorizationError.StatusCode, storeAuthorizationError.Message);
+            }
+
+            if (!string.IsNullOrEmpty(store.LogoUrl))
+            {
+                _imageManagementService.DeleteImage(store.LogoUrl);
+            }
+
+            var imageUrl = await _imageManagementService.AddImageAsync(file, "stores");
+
+            store.LogoUrl = imageUrl;
+            await _unitOfWork.Stores.UpdateAsync(store);
+            await _unitOfWork.CompleteAsync();
+
+            return new ServiceResult<string>(true, 200, "Logo uploaded successfully.", imageUrl);
+        }
+        catch (Exception ex)
+        {
+            return Failure<string>(ex);
+        }
     }
 }

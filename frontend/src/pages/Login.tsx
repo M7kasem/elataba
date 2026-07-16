@@ -1,18 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Role } from '../types';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getIsSellerFromUrlOrState = () => {
+    const searchParams = new URLSearchParams(location.search);
+    return searchParams.get('role') === 'seller' || location.state?.loginAsSeller === true;
+  };
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSeller, setIsSeller] = useState(getIsSellerFromUrlOrState());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (getIsSellerFromUrlOrState()) {
+      setIsSeller(true);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +38,6 @@ const Login: React.FC = () => {
     try {
       const response = await login(email, password);
       // login method returns auth data on success
-      showToast('Login successful! Welcome back.', 'success');
       
       // Determine redirection by user role
       const apiRole = response?.data?.role;
@@ -33,6 +45,23 @@ const Login: React.FC = () => {
         ? Role[apiRole as keyof typeof Role]
         : apiRole;
       const userStoreId = response?.data?.storeId;
+
+      // Validate selected role matches the actual account role
+      if (userRole !== Role.Admin) {
+        const isActuallySeller = userRole === Role.Seller || userRole === Role.StoreManager;
+        if (isSeller && !isActuallySeller) {
+          showToast('This account is registered as a Buyer. Please uncheck "Login as Seller" or register a Seller account.', 'warning');
+          await logout();
+          return;
+        }
+        if (!isSeller && isActuallySeller) {
+          showToast('This account is registered as a Seller. Please check "Login as Seller" to proceed.', 'warning');
+          await logout();
+          return;
+        }
+      }
+
+      showToast('Login successful! Welcome back.', 'success');
 
       if (userRole === Role.Admin) {
         navigate('/admin/dashboard');
@@ -79,7 +108,7 @@ const Login: React.FC = () => {
           </div>
 
           {/* Password */}
-          <div className="form-group" style={{ marginBottom: '2rem' }}>
+          <div className="form-group" style={{ marginBottom: '1.5rem' }}>
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <Lock size={16} />
               <span>Password</span>
@@ -92,6 +121,26 @@ const Login: React.FC = () => {
               placeholder="Enter password"
               required
             />
+          </div>
+
+          {/* Role Distinction Checkbox */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '2rem', padding: '0.6rem 0.8rem', borderRadius: '8px', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-color)' }}>
+            <input
+              type="checkbox"
+              id="isSeller"
+              checked={isSeller}
+              onChange={(e) => setIsSeller(e.target.checked)}
+              style={{
+                width: '18px',
+                height: '18px',
+                cursor: 'pointer',
+                accentColor: 'var(--primary-hover)',
+                margin: 0
+              }}
+            />
+            <label htmlFor="isSeller" style={{ fontSize: '0.9rem', cursor: 'pointer', userSelect: 'none', fontWeight: '600', color: 'var(--text-main)' }}>
+              Login as Seller
+            </label>
           </div>
 
           {/* Submit */}
@@ -118,3 +167,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+

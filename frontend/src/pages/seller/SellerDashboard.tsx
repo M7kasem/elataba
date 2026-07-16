@@ -12,6 +12,7 @@ import { ProductInventory } from './components/ProductInventory';
 import { OfferManagement } from './components/OfferManagement';
 import { OrderList } from './components/OrderList';
 import { StoreSettings } from './components/StoreSettings';
+import Footer from '../../components/Footer';
 
 const SellerDashboard: React.FC = () => {
   const { storeId } = useAuth();
@@ -127,8 +128,10 @@ const SellerDashboard: React.FC = () => {
       </div>
 
       {/* Main Panel Content */}
-      <div className="dashboard-content" style={{ padding: '2rem', overflowX: 'hidden' }}>
-        {renderActiveView()}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 78px)', boxSizing: 'border-box' }}>
+        <div className="dashboard-content" style={{ flex: 1, padding: '2rem' }}>
+          {renderActiveView()}
+        </div>
       </div>
     </div>
   );

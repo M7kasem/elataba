@@ -14,7 +14,8 @@ public record StoreDto(
     decimal Rating,
     DateTime CreatedAt,
     IReadOnlyList<int>? ProductLineIds = null,
-    IReadOnlyList<string>? ProductLineNames = null);
+    IReadOnlyList<string>? ProductLineNames = null,
+    string? LogoUrl = null);
 
 public record CreateStoreDto(
     int OwnerId,

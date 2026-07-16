@@ -4,6 +4,15 @@ import { toCategories } from '../../../api/normalizers';
 import { Category } from '../../../types';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useToast } from '../../../context/ToastContext';
+import { Camera, Upload } from 'lucide-react';
+
+const getAbsoluteImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  return `http://localhost:5191${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 const copy = {
   ar: {
@@ -18,6 +27,8 @@ const copy = {
     success: 'تم تحديث بيانات المحل بنجاح!',
     error: 'فشل في حفظ التعديلات، يرجى المحاولة مرة أخرى.',
     loading: 'جاري تحميل البيانات...',
+    logoUpload: 'تغيير شعار المحل',
+    logoUpdating: 'جاري الرفع...',
   },
   en: {
     title: 'Store Settings',
@@ -31,6 +42,8 @@ const copy = {
     success: 'Store settings updated successfully!',
     error: 'Failed to save changes, please try again.',
     loading: 'Loading store data...',
+    logoUpload: 'Change Store Logo',
+    logoUpdating: 'Uploading...',
   }
 };
 
@@ -50,7 +63,9 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({ storeId }) => {
   const [storeDesc, setStoreDesc] = useState('');
   const [storeCatId, setStoreCatId] = useState<number>(0);
   const [productLineIds, setProductLineIds] = useState<number[]>([]);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     const fetchStoreData = async () => {
@@ -71,6 +86,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({ storeId }) => {
           setStoreDesc(storeData.description || '');
           setStoreCatId(storeData.categoryId || (catList.length > 0 ? catList[0].id : 0));
           setProductLineIds(storeData.productLineIds || []);
+          setLogoUrl(storeData.logoUrl || null);
         }
       } catch (err) {
         console.error('Error fetching store settings:', err);
@@ -111,6 +127,30 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({ storeId }) => {
     }
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await apiClient.put(`/api/Store/${storeId}/logo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data?.data) {
+        setLogoUrl(res.data.data);
+        showToast(labels.success, 'success');
+      }
+    } catch (err) {
+      console.error('Error uploading logo:', err);
+      showToast(labels.error, 'error');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   if (loading) {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>{labels.loading}</div>;
   }
@@ -126,6 +166,53 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({ storeId }) => {
       </div>
 
       <div className="card" style={{ padding: '2rem' }}>
+        
+        {/* Logo Upload Section */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
+          <div style={{
+            position: 'relative',
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            backgroundColor: 'var(--bg-main)',
+            border: '2px dashed var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '1rem'
+          }}>
+            {logoUrl ? (
+              <img src={getAbsoluteImageUrl(logoUrl)} alt="Store Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <Camera size={48} color="var(--text-muted)" />
+            )}
+            
+            <label style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              textAlign: 'center',
+              padding: '0.25rem',
+              cursor: uploadingLogo ? 'default' : 'pointer',
+              fontSize: '0.8rem',
+              opacity: uploadingLogo ? 0.5 : 1,
+            }}>
+              {uploadingLogo ? labels.logoUpdating : labels.logoUpload}
+              <input 
+                type="file" 
+                accept="image/*" 
+                style={{ display: 'none' }} 
+                onChange={handleLogoUpload}
+                disabled={uploadingLogo}
+              />
+            </label>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
           <div className="form-group">

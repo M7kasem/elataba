@@ -61,7 +61,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             Out of Stock
           </span>
         )}
-        <img src={getAbsoluteImageUrl(primaryImage)} alt={product.name} loading="lazy" />
+        <img 
+          src={getAbsoluteImageUrl(primaryImage)} 
+          alt={product.name} 
+          loading="lazy" 
+          onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/500?text=Product+Image'; }}
+        />
       </Link>
 
       <div className="product-card-info">

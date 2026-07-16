@@ -28,6 +28,8 @@ public class Store
 
     public string Description { get; set; } = string.Empty;
 
+    public string? LogoUrl { get; set; }
+
     /// <summary>Calculated as the average of this store's Reviews.Rating.</summary>
     public decimal Rating { get; set; }
 

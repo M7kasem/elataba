@@ -21,6 +21,9 @@ const copy = {
     maxPrice: 'الحد الأقصى للسعر:',
     noProducts: 'لم يتم العثور على منتجات',
     adjustFilters: 'حاول تغيير الفلاتر أو كلمة البحث.',
+    bestDealsTitle: 'افضل العروض',
+    showMore: 'اعرض المزيد',
+    allProducts: 'المزيد من منتجات الجملة',
   },
   en: {
     heroTitle: 'Your Guide to ElAtaba Wholesale',
@@ -35,11 +38,15 @@ const copy = {
     maxPrice: 'Max Price:',
     noProducts: 'No products found',
     adjustFilters: 'Try adjusting your filters or search query.',
+    bestDealsTitle: 'Best Deals',
+    showMore: 'Show more',
+    allProducts: 'More Wholesale Products',
   }
 };
 
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [bestDeals, setBestDeals] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [governorates, setGovernorates] = useState<Governorate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,21 +61,26 @@ const Home: React.FC = () => {
   const [maxPrice, setMaxPrice] = useState<number>(1000);
   const [priceLimit, setPriceLimit] = useState<number>(1000);
   const [showFilters, setShowFilters] = useState(false);
+  const [visibleBestDeals, setVisibleBestDeals] = useState(8); // 2 rows of 4
+  const [visibleProducts, setVisibleProducts] = useState(20); // 5 rows of 4
 
-  const labels = copy[language];
+  const labels = copy[language as keyof typeof copy];
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [prodResponse, catResponse, govResponse] = await Promise.all([
+        const [prodResponse, catResponse, govResponse, dealsResponse] = await Promise.all([
           apiClient.get('/api/Product'),
           apiClient.get('/api/Category/GetAll'),
-          apiClient.get('/api/Governorate')
+          apiClient.get('/api/Governorate'),
+          apiClient.get('/api/Product/best-deals?take=20') // Fetch max 20 for expanding
         ]);
         
         const fetchedProducts = toProducts(prodResponse.data?.data?.data ?? []);
+        const fetchedDeals = toProducts(dealsResponse.data?.data ?? []);
         setProducts(fetchedProducts);
+        setBestDeals(fetchedDeals);
         setCategories(toCategories(catResponse.data?.data || []));
         setGovernorates(toGovernorates(govResponse.data?.data || []));
         
@@ -243,7 +255,57 @@ const Home: React.FC = () => {
         </div>
       )}
 
+      {/* Best Deals Section */}
+      {!loading && !searchQuery && selectedCategory === 'all' && bestDeals.length > 0 && (
+        <div style={{ 
+          padding: '3.5rem 4rem', 
+          marginBottom: '4rem', 
+          backgroundColor: 'rgba(255, 183, 3, 0.08)', 
+          borderTop: '1px solid var(--border-color)', 
+          borderBottom: '1px solid var(--border-color)' 
+        }}>
+          <h2 style={{ 
+            fontSize: '2.2rem', 
+            fontWeight: '800', 
+            marginBottom: '1.5rem', 
+            color: 'var(--secondary)',
+            borderLeft: language === 'en' ? '6px solid var(--primary)' : 'none',
+            borderRight: language === 'ar' ? '6px solid var(--primary)' : 'none',
+            padding: '0 1rem',
+            display: 'inline-block'
+          }}>
+            {labels.bestDealsTitle}
+          </h2>
+          
+          <div className="product-grid" style={{ padding: '0' }}>
+            {bestDeals.slice(0, visibleBestDeals).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+          
+          {bestDeals.length > visibleBestDeals && (
+            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setVisibleBestDeals(prev => prev + 8)}
+                style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '800' }}
+              >
+                {labels.showMore} &darr;
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Main Product Grid */}
+      {(!loading && !searchQuery && selectedCategory === 'all' && bestDeals.length > 0) && (
+        <div style={{ padding: '0 4rem', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--secondary)' }}>
+            {labels.allProducts}
+          </h2>
+        </div>
+      )}
+
       {loading ? (
         <div className="product-grid">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -258,10 +320,24 @@ const Home: React.FC = () => {
           ))}
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="product-grid">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div style={{ padding: '0 0' }}>
+          <div className="product-grid">
+            {filteredProducts.slice(0, visibleProducts).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+          
+          {filteredProducts.length > visibleProducts && (
+            <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+              <button 
+                className="btn btn-outline"
+                onClick={() => setVisibleProducts(prev => prev + 20)}
+                style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '700', borderColor: 'var(--secondary)', color: 'var(--secondary)' }}
+              >
+                {labels.showMore} &darr;
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>

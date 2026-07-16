@@ -5,7 +5,15 @@ import { useToast } from '../context/ToastContext';
 import apiClient from '../api/client';
 import { toGovernorates } from '../api/normalizers';
 import { User, Governorate } from '../types';
-import { User as UserIcon, Mail, Phone, MapPin, CheckCircle, ShieldAlert } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, MapPin, CheckCircle, ShieldAlert, Camera } from 'lucide-react';
+
+const getAbsoluteImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  return `http://localhost:5191${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 const Profile: React.FC = () => {
   const { user, userId, email, fetchProfile, logout, role } = useAuth();
@@ -19,10 +27,14 @@ const Profile: React.FC = () => {
   const [governorateId, setGovernorateId] = useState<number>(0);
   const [city, setCity] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingPic, setUploadingPic] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (userId === null) return;
+
     const loadProfileData = async () => {
       setLoading(true);
       try {
@@ -40,6 +52,7 @@ const Profile: React.FC = () => {
           setGovernorateId(profile.governorateId);
           setCity(profile.city);
           setShippingAddress(profile.shippingAddress);
+          setProfilePictureUrl(profile.profilePictureUrl || null);
         }
       } catch (err) {
         console.error('Error loading profile info:', err);
@@ -50,7 +63,7 @@ const Profile: React.FC = () => {
     };
 
     loadProfileData();
-  }, [fetchProfile, showToast]);
+  }, [userId, fetchProfile, showToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +75,8 @@ const Profile: React.FC = () => {
 
       const payload = {
         email,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         phone: phone.trim(),
         role,
         governorateId: Number(governorateId),
@@ -90,6 +105,31 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    setUploadingPic(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await apiClient.put(`/api/User/${userId}/profile-picture`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data?.data) {
+        setProfilePictureUrl(res.data.data);
+        showToast('Profile picture updated successfully', 'success');
+        await fetchProfile();
+      }
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
+      showToast('Failed to upload profile picture.', 'error');
+    } finally {
+      setUploadingPic(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="main-content" style={{ padding: '4rem' }}>
@@ -111,8 +151,9 @@ const Profile: React.FC = () => {
         <div style={{ flex: '1 1 250px' }}>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             <div style={{
-              width: '80px',
-              height: '80px',
+              position: 'relative',
+              width: '100px',
+              height: '100px',
               borderRadius: '50%',
               backgroundColor: 'rgba(255, 183, 3, 0.1)',
               color: 'var(--primary-hover)',
@@ -120,9 +161,37 @@ const Profile: React.FC = () => {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '2rem',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              overflow: 'hidden',
+              border: '2px solid var(--border-color)'
             }}>
-              {firstName?.[0]}{lastName?.[0]}
+              {profilePictureUrl ? (
+                <img src={getAbsoluteImageUrl(profilePictureUrl)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <>{firstName?.[0]}{lastName?.[0]}</>
+              )}
+
+              <label style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                color: 'white',
+                textAlign: 'center',
+                padding: '0.2rem',
+                cursor: uploadingPic ? 'default' : 'pointer',
+                opacity: uploadingPic ? 0.5 : 1,
+              }}>
+                <Camera size={18} style={{ margin: '0 auto' }} />
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  style={{ display: 'none' }} 
+                  onChange={handleProfilePictureUpload}
+                  disabled={uploadingPic}
+                />
+              </label>
             </div>
             
             <div>

@@ -36,6 +36,25 @@ export interface User {
   city: string;
   shippingAddress: string;
   storeId?: number | null;
+  profilePictureUrl?: string | null;
+}
+
+export interface Store {
+  storeId: number;
+  ownerId: number;
+  ownerEmail?: string;
+  managerId?: number | null;
+  managerEmail?: string;
+  categoryId: number;
+  categoryName?: string;
+  storeName: string;
+  location: string;
+  description: string;
+  rating: number;
+  createdAt: string;
+  productLineIds?: number[];
+  productLineNames?: string[];
+  logoUrl?: string | null;
 }
 
 export interface AuthState {

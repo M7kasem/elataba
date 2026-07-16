@@ -6,6 +6,8 @@ import { useToast } from '../context/ToastContext';
 import { Send, MessageCircle, User, Store, Package } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { Role } from '../types';
+import { useLanguage } from '../context/LanguageContext';
+import Footer from '../components/Footer';
 
 interface LocalMessage {
   id: string;
@@ -32,6 +34,7 @@ interface ChatThread {
 const Messages: React.FC = () => {
   const { userId, email, role } = useAuth();
   const { showToast } = useToast();
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -236,7 +239,17 @@ const Messages: React.FC = () => {
       <div className="card" style={{ padding: 0, display: 'flex', height: '650px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
         {/* Sidebar: Threads List */}
         <div style={{ width: '320px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
-          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', fontWeight: 'bold' }}>Conversations</div>
+          <div style={{ 
+            height: '75px', 
+            padding: '0 1.5rem', 
+            borderBottom: '1px solid var(--border-color)', 
+            fontWeight: 'bold', 
+            fontSize: '1.4rem', 
+            display: 'flex',
+            alignItems: 'center',
+            boxSizing: 'border-box',
+            color: 'var(--secondary)'
+          }}>Conversations</div>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             {threads.map((t, idx) => (
               <button
@@ -286,12 +299,14 @@ const Messages: React.FC = () => {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-card)' }}>
             {/* Chat Header */}
             <div style={{ 
-              padding: '1rem 1.5rem', 
+              height: '75px',
+              padding: '0 1.5rem', 
               borderBottom: '1px solid var(--border-color)', 
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center',
-              backgroundColor: 'rgba(255, 183, 3, 0.12)'
+              backgroundColor: 'rgba(255, 183, 3, 0.12)',
+              boxSizing: 'border-box'
             }}>
               <div>
                 <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{activeThread.partyName}</h3>
@@ -394,8 +409,11 @@ const Messages: React.FC = () => {
         <div style={{ width: '260px', flexShrink: 0, height: 'calc(100vh - 78px)', position: 'sticky', top: '78px' }}>
           <Sidebar type="seller" />
         </div>
-        <div style={{ flex: 1, padding: '2rem', overflowX: 'hidden' }}>
-          {renderMessagesContent()}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 78px)', boxSizing: 'border-box' }}>
+          <div style={{ flex: 1, padding: '2rem', overflowX: 'hidden' }}>
+            {renderMessagesContent()}
+          </div>
+          <Footer />
         </div>
       </div>
     );
@@ -407,16 +425,21 @@ const Messages: React.FC = () => {
         <div style={{ width: '260px', flexShrink: 0, height: 'calc(100vh - 78px)', position: 'sticky', top: '78px' }}>
           <Sidebar type="admin" />
         </div>
-        <div style={{ flex: 1, padding: '2rem', overflowX: 'hidden' }}>
-          {renderMessagesContent()}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 78px)', boxSizing: 'border-box' }}>
+          <div style={{ flex: 1, padding: '2rem', overflowX: 'hidden' }}>
+            {renderMessagesContent()}
+          </div>
+          <Footer />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="main-content" style={{ padding: '2rem 4rem' }}>
-      {renderMessagesContent()}
+    <div className="main-content" style={{ padding: '2rem 4rem', display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 78px)' }}>
+      <div style={{ flex: 1 }}>
+        {renderMessagesContent()}
+      </div>
     </div>
   );
 };

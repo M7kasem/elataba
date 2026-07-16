@@ -9,4 +9,5 @@ public interface IUserService
     Task<ServiceResult<UserDto>> GetByIdAsync(int id);
     Task<ServiceResult<UserDto>> UpdateAsync(int id, UpdateUserDto dto);
     Task<ServiceResult> DeleteAsync(int id);
+    Task<ServiceResult<string>> UploadProfilePictureAsync(int userId, Elattba.Core.Services.ImageUploadFile file);
 }

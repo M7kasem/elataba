@@ -22,6 +22,8 @@ public class User
     public string City { get; set; } = string.Empty;
     public string ShippingAddress { get; set; } = string.Empty;
 
+    public string? ProfilePictureUrl { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation

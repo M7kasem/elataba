@@ -65,4 +65,20 @@ public class StoreController : ControllerBase
         return this.ToActionResult(result);
     }
 
+    [HttpPut("{id}/logo")]
+    [Authorize(Policy = AuthConstants.SellerOnlyPolicy)]
+    public async Task<IActionResult> UploadLogo(int id, IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new ResponseAPI(400, "No file uploaded."));
+
+        var imageUploadFile = new Elattba.Core.Services.ImageUploadFile(
+            file.OpenReadStream(),
+            file.FileName,
+            file.ContentType,
+            file.Length);
+
+        var result = await _storeService.UploadLogoAsync(id, imageUploadFile);
+        return this.ToActionResult(result);
+    }
 }

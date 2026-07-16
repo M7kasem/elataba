@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import apiClient, { registerAuthCallbacks } from '../api/client';
 import { Role, User } from '../types';
 import { toUser } from '../api/normalizers';
@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [token]);
 
-  const fetchProfile = async (): Promise<User> => {
+  const fetchProfile = useCallback(async (): Promise<User> => {
     try {
       const currentUserId = userId ?? Number(localStorage.getItem('elAtaba_userId'));
       if (!currentUserId) {
@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       throw err;
     }
-  };
+  }, [userId, storeId]);
 
   const login = async (emailInput: string, passwordInput: string) => {
     try {
