@@ -54,7 +54,15 @@ const Navbar: React.FC = () => {
       boxShadow: 'none',
       zIndex: 100
     } : {}}>
-      <Link to="/" className="navbar-logo" aria-label="ElAtaba home" style={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, width: '260px' }}>
+      <Link to="/" className="navbar-logo" aria-label="ElAtaba home" style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        padding: 0, 
+        width: '260px',
+        marginTop: '-1rem',
+        marginLeft: language === 'en' ? '-3rem' : 0,
+        marginRight: language === 'ar' ? '-3rem' : 0
+      }}>
         <img 
           src={language === 'ar' ? arabicLogo : englishLogo} 
           alt="ElAtaba Logo" 
