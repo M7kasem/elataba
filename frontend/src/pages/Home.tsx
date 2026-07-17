@@ -146,7 +146,8 @@ const Home: React.FC = () => {
       <div 
         style={{
           width: '100%',
-          height: '40vh',
+          height: '55vh',
+          marginBottom: '2rem',
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('https://cdn2.wingie.com/uploads/f_webp,s_1920x430,q_50,fit_cover/swq_aletbt_311c7c674c.jpg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -157,7 +158,7 @@ const Home: React.FC = () => {
           color: 'white',
           textAlign: 'center',
           padding: '2rem',
-          boxShadow: 'var(--shadow-md)'
+          boxShadow: 'var(--shadow-lg)'
         }}
       >
         <h1 style={{ color: 'white', textShadow: '2px 2px 8px rgba(0,0,0,0.8)', fontSize: '3rem', margin: 0, fontFamily: 'var(--font-arabic)' }}>
