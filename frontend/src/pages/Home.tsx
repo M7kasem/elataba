@@ -146,7 +146,7 @@ const Home: React.FC = () => {
       <div 
         style={{
           width: '100%',
-          height: '55vh',
+          height: '65vh',
           marginBottom: '2rem',
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('https://cdn2.wingie.com/uploads/f_webp,s_1920x430,q_50,fit_cover/swq_aletbt_311c7c674c.jpg')`,
           backgroundSize: 'cover',
