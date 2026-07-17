@@ -12,6 +12,7 @@ import FloatingRoleSwitcher from './components/FloatingRoleSwitcher';
 
 // Pages
 const Home = lazy(() => import('./pages/Home'));
+const Products = lazy(() => import('./pages/Products'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const ImageSearch = lazy(() => import('./pages/ImageSearch'));
 const Cart = lazy(() => import('./pages/Cart'));
@@ -79,6 +80,7 @@ const AppContent: React.FC = () => {
         <Routes>
           {/* Public Catalog Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/image-search" element={<ImageSearch />} />
           

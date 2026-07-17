@@ -71,7 +71,7 @@ const Navbar: React.FC = () => {
       </form>
 
       <div className="navbar-actions">
-        <Link to="/" className="nav-link-item">{labels.catalog}</Link>
+        <Link to="/products" className="nav-link-item">{labels.catalog}</Link>
         <button className="nav-icon-button language-switch" onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')} title={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}>
           {language === 'ar' ? 'EN' : 'ع'}
         </button>

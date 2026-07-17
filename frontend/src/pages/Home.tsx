@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import apiClient from '../api/client';
 import { toCategories, toGovernorates, toProducts } from '../api/normalizers';
 import { Product, Category, Governorate } from '../types';
@@ -146,7 +146,7 @@ const Home: React.FC = () => {
       <div 
         style={{
           width: '100%',
-          height: '350px',
+          height: '40vh',
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('https://cdn2.wingie.com/uploads/f_webp,s_1920x430,q_50,fit_cover/swq_aletbt_311c7c674c.jpg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -168,92 +168,103 @@ const Home: React.FC = () => {
         </p>
       </div>
 
-      {/* Category Horizontal Filter Row */}
-      <div className="category-row">
-        <button
-          className={`category-tab ${selectedCategory === 'all' ? 'active' : ''}`}
-          onClick={() => handleCategorySelect('all')}
-        >
+      {/* Main 2-column Layout */}
+      <div style={{ display: 'flex', flexDirection: 'row-reverse', padding: '2rem 4rem', gap: '3rem', alignItems: 'flex-start' }}>
+        
+        {/* Sticky Sidebar */}
+        <aside style={{ width: '280px', flexShrink: 0, position: 'sticky', top: '100px' }}>
+          
+          {/* Vertical Categories */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '2rem' }}>
+            <button
+              className={`category-tab ${selectedCategory === 'all' ? 'active' : ''}`}
+              onClick={() => handleCategorySelect('all')}
+              style={{ width: '100%', textAlign: language === 'ar' ? 'right' : 'left' }}
+            >
           {labels.allCategories}
         </button>
         {categories.map((cat) => (
-          <button
-            key={cat.id}
-            className={`category-tab ${selectedCategory === String(cat.id) ? 'active' : ''}`}
-            onClick={() => handleCategorySelect(String(cat.id))}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Filter Options Controls */}
-      <div style={{ padding: '0 4rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button 
-          className="btn btn-outline" 
-          onClick={() => setShowFilters(!showFilters)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <SlidersHorizontal size={18} />
-          <span>{showFilters ? labels.hideFilters : labels.showFilters}</span>
-        </button>
-
-        {searchQuery && (
-          <div style={{ fontSize: '1rem', fontWeight: 600 }}>
-            {labels.searchResults} <span style={{ color: 'var(--primary-hover)' }}>"{searchQuery}"</span>
-            <span style={{ color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '0.5rem' }}>
-              ({filteredProducts.length} {labels.itemsFound})
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Expandable Filter Details panel */}
-      {showFilters && (
-        <div className="card" style={{ margin: '0 4rem 2rem', padding: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
-          {/* Governorate Filter */}
-          <div className="form-group">
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <MapPin size={16} />
-              <span>{labels.filterGov}</span>
-            </label>
-            <select 
-              className="form-control"
-              value={selectedGov}
-              onChange={handleGovernorateSelect}
+            <button
+              key={cat.id}
+              className={`category-tab ${selectedCategory === String(cat.id) ? 'active' : ''}`}
+              onClick={() => handleCategorySelect(String(cat.id))}
+              style={{ width: '100%', textAlign: language === 'ar' ? 'right' : 'left' }}
             >
-              <option value="all">{labels.allGovs}</option>
-              {governorates.map((gov) => (
-                <option key={gov.id} value={gov.name}>{gov.name}</option>
-              ))}
-            </select>
+              {cat.name}
+            </button>
+          ))}
           </div>
 
-          {/* Max Price Filter Slider */}
-          <div className="form-group">
-            <label className="form-label">
-              <span>{labels.maxPrice} </span>
-              <strong style={{ color: 'var(--primary-hover)' }}>${priceLimit}</strong>
-            </label>
-            <input
-              type="range"
-              min="0"
-              max={maxPrice}
-              value={priceLimit}
-              onChange={(e) => setPriceLimit(Number(e.target.value))}
-              style={{
-                accentColor: 'var(--primary)',
-                width: '100%',
-                cursor: 'pointer'
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              <span>$0</span>
-              <span>${maxPrice}</span>
-            </div>
+          {/* Filter Options Controls */}
+          <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <button 
+              className="btn btn-outline" 
+              onClick={() => setShowFilters(!showFilters)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', justifyContent: 'center' }}
+            >
+              <SlidersHorizontal size={18} />
+              <span>{showFilters ? labels.hideFilters : labels.showFilters}</span>
+            </button>
           </div>
-        </div>
-      )}
+
+          {/* Expandable Filter Details panel */}
+          {showFilters && (
+            <div className="card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {/* Governorate Filter */}
+              <div className="form-group">
+                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <MapPin size={16} />
+                  <span>{labels.filterGov}</span>
+                </label>
+                <select 
+                  className="form-control"
+                  value={selectedGov}
+                  onChange={handleGovernorateSelect}
+                >
+                  <option value="all">{labels.allGovs}</option>
+                  {governorates.map((gov) => (
+                    <option key={gov.id} value={gov.name}>{gov.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Max Price Filter Slider */}
+              <div className="form-group">
+                <label className="form-label">
+                  <span>{labels.maxPrice} </span>
+                  <strong style={{ color: 'var(--primary-hover)' }}>${priceLimit}</strong>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max={maxPrice}
+                  value={priceLimit}
+                  onChange={(e) => setPriceLimit(Number(e.target.value))}
+                  style={{
+                    accentColor: 'var(--primary)',
+                    width: '100%',
+                    cursor: 'pointer'
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <span>$0</span>
+                  <span>${maxPrice}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </aside>
+
+        {/* Main Content Area */}
+        <main style={{ flex: 1, minWidth: 0 }}>
+          {searchQuery && (
+            <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '2rem' }}>
+              {labels.searchResults} <span style={{ color: 'var(--primary-hover)' }}>"{searchQuery}"</span>
+              <span style={{ color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+                ({filteredProducts.length} {labels.itemsFound})
+              </span>
+            </div>
+          )}
 
       {/* Best Deals Section */}
       {!loading && !searchQuery && selectedCategory === 'all' && bestDeals.length > 0 && (
@@ -297,54 +308,13 @@ const Home: React.FC = () => {
         </div>
       )}
 
-      {/* Main Product Grid */}
-      {(!loading && !searchQuery && selectedCategory === 'all' && bestDeals.length > 0) && (
-        <div style={{ padding: '0 4rem', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: '700', color: 'var(--secondary)' }}>
-            {labels.allProducts}
-          </h2>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="product-grid">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="product-card" style={{ height: '380px' }}>
-              <div className="skeleton" style={{ width: '100%', height: '240px' }} />
-              <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div className="skeleton" style={{ width: '40%', height: '14px' }} />
-                <div className="skeleton" style={{ width: '80%', height: '20px' }} />
-                <div className="skeleton" style={{ width: '30%', height: '22px', marginTop: '1rem' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : filteredProducts.length > 0 ? (
-        <div style={{ padding: '0 0' }}>
-          <div className="product-grid">
-            {filteredProducts.slice(0, visibleProducts).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <Link to="/products" className="btn btn-primary" style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '800', fontSize: '1.1rem' }}>
+              {labels.allProducts} &rarr;
+            </Link>
           </div>
-          
-          {filteredProducts.length > visibleProducts && (
-            <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-              <button 
-                className="btn btn-outline"
-                onClick={() => setVisibleProducts(prev => prev + 20)}
-                style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '700', borderColor: 'var(--secondary)', color: 'var(--secondary)' }}
-              >
-                {labels.showMore} &darr;
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <h3 style={{ fontSize: '1.5rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>{labels.noProducts}</h3>
-          <p style={{ color: 'var(--text-muted)' }}>{labels.adjustFilters}</p>
-        </div>
-      )}
+        </main>
+      </div>
     </div>
   );
 };
