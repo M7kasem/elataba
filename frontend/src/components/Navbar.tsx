@@ -59,7 +59,6 @@ const Navbar: React.FC = () => {
         alignItems: 'center', 
         padding: 0, 
         width: '260px',
-        marginTop: '-1rem',
         marginLeft: language === 'en' ? '-3rem' : 0,
         marginRight: language === 'ar' ? '-3rem' : 0
       }}>
