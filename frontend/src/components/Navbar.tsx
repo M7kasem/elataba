@@ -49,9 +49,10 @@ const Navbar: React.FC = () => {
       top: 0,
       left: 0,
       width: '100%',
-      backgroundColor: 'transparent',
-      borderBottom: 'none',
-      boxShadow: 'none',
+      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+      backdropFilter: 'blur(10px)',
+      borderBottom: '1px solid rgba(0,0,0,0.05)',
+      boxShadow: 'var(--shadow-sm)',
       zIndex: 100
     } : {}}>
       <Link to="/" className="navbar-logo" aria-label="ElAtaba home" style={{ 
