@@ -61,7 +61,7 @@ public sealed class ProductQueryServiceTests
         var result = await service.GetAllAsync(new ProductParams { Sort = "priceDesc", PageSize = 6 });
 
         Assert.True(result.Succeeded);
-        Assert.Equal([300, 200, 100, 50], result.Data!.Data.Select(product => product.BasePrice));
+        Assert.Equal([300, 200, 150, 100, 50], result.Data!.Data.Select(product => product.BasePrice));
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class ProductQueryServiceTests
         Assert.True(result.Succeeded);
         var deals = result.Data!;
         Assert.Equal(deals.Count, deals.Select(product => product.ProductId).Distinct().Count());
-        Assert.Equal([1, 2, 3, 4], deals.Select(product => product.ProductId).OrderBy(productId => productId));
+        Assert.Equal([1, 2, 3, 4, 5], deals.Select(product => product.ProductId).OrderBy(productId => productId));
         var productWithOverlap = Assert.Single(deals, product => product.ProductId == 1);
         Assert.Equal(35, productWithOverlap.DiscountPercentage);
         Assert.DoesNotContain(deals, product => product.DiscountPercentage == 80);
