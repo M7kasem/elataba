@@ -417,7 +417,7 @@ body.arabic-ui h1, body.arabic-ui h2, body.arabic-ui h3, body.arabic-ui h4, body
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.4rem 4rem;
+  padding: 0 4rem;
   background-color: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
   position: sticky;

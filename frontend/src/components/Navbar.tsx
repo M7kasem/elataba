@@ -60,7 +60,6 @@ const Navbar: React.FC = () => {
         alignItems: 'center', 
         padding: 0, 
         width: '260px',
-        marginTop: '-0.4rem',
         marginLeft: language === 'en' ? '-4rem' : 0,
         marginRight: language === 'ar' ? '-4rem' : 0,
         boxShadow: 'var(--shadow-md)',
