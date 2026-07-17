@@ -24,3 +24,7 @@ public record AuthResponseDto(
     string Email,
     string Role,
     int? StoreId);
+
+public record ForgotPasswordDto(string Email);
+
+public record ResetPasswordDto(string Email, string Token, string NewPassword);

@@ -64,6 +64,7 @@ namespace Elattaba.API.Extensions
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<IEmailSender, LoggingEmailSender>();
             services.AddScoped<IUserProvisioningService, UserProvisioningService>();
             services.AddScoped<ICarrierService, CarrierService>();
             services.AddScoped<ICategoryService, CategoryService>();

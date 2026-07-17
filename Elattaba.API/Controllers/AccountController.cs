@@ -18,17 +18,23 @@ public sealed class AccountController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserProvisioningService _userProvisioningService;
     private readonly UserManager<AppUser> _userManager;
+    private readonly IEmailSender _emailSender;
+    private readonly IConfiguration _configuration;
 
     public AccountController(
         IUserProvisioningService userProvisioningService,
         UserManager<AppUser> userManager,
         IUnitOfWork unitOfWork,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IEmailSender emailSender,
+        IConfiguration configuration)
     {
         _userProvisioningService = userProvisioningService;
         _userManager = userManager;
         _unitOfWork = unitOfWork;
         _tokenService = tokenService;
+        _emailSender = emailSender;
+        _configuration = configuration;
     }
 
     [HttpPost("register")]
@@ -71,6 +77,44 @@ public sealed class AccountController : ControllerBase
     {
         Response.Cookies.Delete(AuthConstants.JwtCookieName);
         return Ok(new ResponseAPI(200, "Logged out successfully"));
+    }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user != null)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = Uri.EscapeDataString(token);
+            var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:5173";
+            var resetLink = $"{baseUrl}/reset-password?token={encodedToken}&email={Uri.EscapeDataString(dto.Email)}";
+            
+            await _emailSender.SendPasswordResetEmailAsync(dto.Email, resetLink);
+        }
+
+        return Ok(new ResponseAPI(200, "If an account with that email exists, a reset link has been sent."));
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+        {
+            return BadRequest(new ResponseAPI(400, "Invalid request."));
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+            return BadRequest(new ResponseAPI(400, errors));
+        }
+
+        return Ok(new ResponseAPI(200, "Password has been reset successfully."));
     }
 
     private async Task<AuthResponseDto> BuildAuthResponseAsync(AppUser appUser, string role)

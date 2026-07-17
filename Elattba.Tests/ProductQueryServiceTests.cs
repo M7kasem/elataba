@@ -12,13 +12,13 @@ public sealed class ProductQueryServiceTests
         var unitOfWork = SeedProducts();
         var service = NewService(unitOfWork);
 
-        var result = await service.GetAllAsync(new ProductParams());
+        var result = await service.GetAllAsync(new ProductParams { PageSize = 3 });
 
         Assert.True(result.Succeeded);
-        Assert.Equal(4, result.Data!.Count);
+        Assert.Equal(5, result.Data!.Count);
         Assert.Equal(1, result.Data.PageNumber);
         Assert.Equal(3, result.Data.PageSize);
-        Assert.Equal(["Alpha", "Bravo", "Charlie"], result.Data.Data.Select(product => product.Name));
+        Assert.Equal(["Alpha", "Alpha", "Bravo"], result.Data.Data.Select(product => product.Name));
     }
 
     [Fact]
@@ -281,6 +281,16 @@ public sealed class ProductQueryServiceTests
             Name = "Delta",
             Description = "Running shoes",
             BasePrice = 300,
+            StockQuantity = 5
+        });
+        unitOfWork.ProductsRepo.Items.Add(new Product
+        {
+            ProductId = 5,
+            StoreId = 1,
+            CategoryId = 1,
+            Name = "Alpha",
+            Description = "Another Alpha product",
+            BasePrice = 150,
             StockQuantity = 5
         });
         return unitOfWork;

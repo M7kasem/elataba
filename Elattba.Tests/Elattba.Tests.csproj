@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Elattba.Application\Elattba.Application.csproj" />
     <ProjectReference Include="..\Elattba.Core\Elattba.Core.csproj" />
     <ProjectReference Include="..\Elattba.InfraStructure\Elattba.InfraStructure.csproj" />
+    <ProjectReference Include="..\Elattaba.API\Elattaba.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
