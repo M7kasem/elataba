@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, MessageSquare, Moon, Package, Search, ShieldAlert, ShoppingCart, Store, Sun, User, Camera } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -22,6 +22,7 @@ const Navbar: React.FC = () => {
   const { cartItems } = useCart();
   const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('elAtaba_theme') === 'dark');
 
@@ -37,8 +38,19 @@ const Navbar: React.FC = () => {
     if (searchQuery.trim()) navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
   };
 
+  const isHome = location.pathname === '/';
+
   return (
-    <nav className="navbar-container">
+    <nav className="navbar-container" style={isHome ? {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      backgroundColor: 'transparent',
+      borderBottom: 'none',
+      boxShadow: 'none',
+      zIndex: 100
+    } : {}}>
       <Link to="/" className="navbar-logo" aria-label="ElAtaba home" style={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0 }}>
         <img 
           src={language === 'ar' ? '/arabic-logo-cropped-solid.png' : '/english-logo-cropped-solid.png'} 

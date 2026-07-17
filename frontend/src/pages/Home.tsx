@@ -158,6 +158,7 @@ const Home: React.FC = () => {
           color: 'white',
           textAlign: 'center',
           padding: '2rem',
+          paddingTop: 'calc(2rem + 80px)', // To account for the floating navbar
           boxShadow: 'var(--shadow-lg)'
         }}
       >
