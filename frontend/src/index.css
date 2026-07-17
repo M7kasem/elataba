@@ -769,3 +769,25 @@ body.arabic-ui h1, body.arabic-ui h2, body.arabic-ui h3, body.arabic-ui h4, body
     margin-bottom: 1rem;
   }
 }
+
+
+/* Home Transparent Navbar Overrides */
+.navbar-home .nav-link-item,
+.navbar-home .nav-icon-button,
+.navbar-home .cart-link,
+.navbar-home .cart-link span:not(.cart-count),
+.navbar-home .navbar-actions > a:not(.btn) {
+  color: white !important;
+}
+
+.navbar-home .nav-link-item:hover,
+.navbar-home .nav-icon-button:hover,
+.navbar-home .cart-link:hover {
+  color: var(--primary) !important;
+}
+
+.navbar-home .navbar-search {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}

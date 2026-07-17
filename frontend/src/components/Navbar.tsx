@@ -44,7 +44,7 @@ const Navbar: React.FC = () => {
   const isHome = location.pathname === '/';
 
   return (
-    <nav className="navbar-container" style={isHome ? {
+    <nav className={`navbar-container ${isHome ? 'navbar-home' : ''}`} style={isHome ? {
       position: 'absolute',
       top: 0,
       left: 0,
@@ -59,8 +59,14 @@ const Navbar: React.FC = () => {
         alignItems: 'center', 
         padding: 0, 
         width: '260px',
-        marginLeft: language === 'en' ? '-3rem' : 0,
-        marginRight: language === 'ar' ? '-3rem' : 0
+        marginTop: '-0.4rem',
+        marginLeft: language === 'en' ? '-4rem' : 0,
+        marginRight: language === 'ar' ? '-4rem' : 0,
+        boxShadow: 'var(--shadow-md)',
+        borderBottomRightRadius: language === 'en' ? '1.5rem' : 0,
+        borderBottomLeftRadius: language === 'ar' ? '1.5rem' : 0,
+        backgroundColor: 'var(--bg-main)', // Using bg-main to blend nicely or white
+        overflow: 'hidden'
       }}>
         <img 
           src={language === 'ar' ? arabicLogo : englishLogo} 
