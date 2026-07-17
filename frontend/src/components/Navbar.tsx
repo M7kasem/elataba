@@ -17,8 +17,8 @@ const copy = {
   },
 };
 
-import arabicLogo from '../assets/Arabic Logo.svg';
-import englishLogo from '../assets/English Logo.svg';
+import arabicLogo from '../assets/Arabic_logo_cropped.svg';
+import englishLogo from '../assets/English_logo_cropped.svg';
 
 const Navbar: React.FC = () => {
   const { role, storeId, logout, isAuthenticated } = useAuth();
