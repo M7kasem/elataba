@@ -49,7 +49,7 @@ const Navbar: React.FC = () => {
       top: 0,
       left: 0,
       width: '100%',
-      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+      backgroundColor: 'rgb(255 255 255 / 15%)',
       backdropFilter: 'blur(10px)',
       borderBottom: '1px solid rgba(0,0,0,0.05)',
       boxShadow: 'var(--shadow-sm)',
