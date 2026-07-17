@@ -1,10 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Role } from '../types';
 
 const Footer: React.FC = () => {
   const { role, isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  // Hide global footer on dashboard routes
+  if (location.pathname.startsWith('/seller') || location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   // Show only when logged in as a Buyer
   const showBecomeSeller = isAuthenticated && role === Role.Buyer;

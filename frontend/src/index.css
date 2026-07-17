@@ -580,7 +580,6 @@ body.arabic-ui h1, body.arabic-ui h2, body.arabic-ui h3, body.arabic-ui h4, body
   box-shadow: none;
   border-inline-end: 1px solid var(--border-color);
   height: 100%;
-  min-height: 100vh;
 }
 
 .sidebar-logo {
@@ -790,4 +789,30 @@ body.arabic-ui h1, body.arabic-ui h2, body.arabic-ui h3, body.arabic-ui h4, body
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.image-upload-container {
+  position: relative;
+}
+
+.image-upload-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+  border-radius: inherit;
+}
+
+.image-upload-overlay:hover,
+.image-upload-container:hover .image-upload-overlay {
+  opacity: 1;
 }
