@@ -150,7 +150,7 @@ const Profile: React.FC = () => {
         {/* Left Card: Summary details */}
         <div style={{ flex: '1 1 250px' }}>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <div style={{
+            <div className="image-upload-container" style={{
               position: 'relative',
               width: '100px',
               height: '100px',
@@ -171,19 +171,11 @@ const Profile: React.FC = () => {
                 <>{firstName?.[0]}{lastName?.[0]}</>
               )}
 
-              <label style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                backgroundColor: 'rgba(0,0,0,0.5)',
-                color: 'white',
-                textAlign: 'center',
-                padding: '0.2rem',
+              <label className="image-upload-overlay" style={{
                 cursor: uploadingPic ? 'default' : 'pointer',
-                opacity: uploadingPic ? 0.5 : 1,
+                opacity: uploadingPic ? 0.5 : undefined,
               }}>
-                <Camera size={18} style={{ margin: '0 auto' }} />
+                <Camera size={24} />
                 <input 
                   type="file" 
                   accept="image/*" 

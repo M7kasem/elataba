@@ -4,7 +4,7 @@ import { toCategories } from '../../../api/normalizers';
 import { Category } from '../../../types';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useToast } from '../../../context/ToastContext';
-import { Camera, Upload } from 'lucide-react';
+import { Camera, Upload, Store } from 'lucide-react';
 
 const getAbsoluteImageUrl = (url: string) => {
   if (!url) return '';
@@ -169,7 +169,7 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({ storeId }) => {
         
         {/* Logo Upload Section */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-          <div style={{
+          <div className="image-upload-container" style={{
             position: 'relative',
             width: '120px',
             height: '120px',
@@ -185,23 +185,18 @@ export const StoreSettings: React.FC<StoreSettingsProps> = ({ storeId }) => {
             {logoUrl ? (
               <img src={getAbsoluteImageUrl(logoUrl)} alt="Store Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <Camera size={48} color="var(--text-muted)" />
+              <Store size={48} color="var(--text-muted)" />
             )}
             
-            <label style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              color: 'white',
-              textAlign: 'center',
-              padding: '0.25rem',
+            <label className="image-upload-overlay" style={{
               cursor: uploadingLogo ? 'default' : 'pointer',
               fontSize: '0.8rem',
-              opacity: uploadingLogo ? 0.5 : 1,
+              opacity: uploadingLogo ? 0.5 : undefined,
+              flexDirection: 'column',
+              gap: '0.25rem'
             }}>
-              {uploadingLogo ? labels.logoUpdating : labels.logoUpload}
+              <Camera size={32} />
+              <span>{uploadingLogo ? labels.logoUpdating : labels.logoUpload}</span>
               <input 
                 type="file" 
                 accept="image/*" 
