@@ -17,6 +17,9 @@ const copy = {
   },
 };
 
+import arabicLogo from '../assets/Arabic Logo.svg';
+import englishLogo from '../assets/English Logo.svg';
+
 const Navbar: React.FC = () => {
   const { role, storeId, logout, isAuthenticated } = useAuth();
   const { cartItems } = useCart();
@@ -51,11 +54,11 @@ const Navbar: React.FC = () => {
       boxShadow: 'none',
       zIndex: 100
     } : {}}>
-      <Link to="/" className="navbar-logo" aria-label="ElAtaba home" style={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0 }}>
+      <Link to="/" className="navbar-logo" aria-label="ElAtaba home" style={{ display: 'flex', alignItems: 'center', padding: 0, margin: 0, width: '260px' }}>
         <img 
-          src={language === 'ar' ? '/arabic-logo-cropped-solid.png' : '/english-logo-cropped-solid.png'} 
+          src={language === 'ar' ? arabicLogo : englishLogo} 
           alt="ElAtaba Logo" 
-          style={{ height: '65px', objectFit: 'contain', display: 'block' }}
+          style={{ width: '100%', height: 'auto', objectFit: 'contain', display: 'block' }}
         />
       </Link>
 
