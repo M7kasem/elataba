@@ -70,6 +70,10 @@ public static class IdentityRoleSeeder
 
         // 5. Seed Store, Products, and Offers for local demo
         await SeedCatalogAsync(dbContext);
+
+        // 6. Add the broader, repeat-safe catalog used to make local development
+        // resemble a populated marketplace. It only adds records that are missing.
+        await DemoCatalogSeeder.SeedAsync(dbContext, provisioningService);
     }
 
     private static async Task SeedDefaultUserAsync(

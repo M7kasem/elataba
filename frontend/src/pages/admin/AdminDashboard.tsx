@@ -4,6 +4,7 @@ import apiClient from '../../api/client';
 import { toCarriers, toCategories, toGovernorates, toShippingRates, toUser, toProducts } from '../../api/normalizers';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { User, Category, Governorate, Carrier, ShippingRate, Role, Product } from '../../types';
 import Sidebar from '../../components/Sidebar';
 import { 
@@ -14,6 +15,7 @@ import Footer from '../../components/Footer';
 
 const AdminDashboard: React.FC = () => {
   const { showToast } = useToast();
+  const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -315,7 +317,7 @@ const AdminDashboard: React.FC = () => {
                               padding: '0.4rem 0.8rem'
                             }}
                           >
-                            Browse Category Products &rarr;
+                            {language === 'ar' ? 'تصفح منتجات التصنيف ←' : 'Browse Category Products →'}
                           </Link>
                         </div>
 
