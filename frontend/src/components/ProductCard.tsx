@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { ShoppingCart } from 'lucide-react';
 
 
 interface ProductCardProps {
@@ -9,6 +12,8 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const { language } = useLanguage();
 
   const primaryImage = product.images?.find((img) => img.isPrimary)?.imageUrl 
@@ -26,6 +31,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const hasDiscount = product.hasActiveOffer && product.discountPercentage && product.discountPercentage > 0;
   const isOutOfStock = product.stockQuantity <= 0;
   const hasTieredPricing = product.pricingTiers && product.pricingTiers.length > 0;
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isOutOfStock) return;
+    addToCart(product, 1);
+  };
 
 
 
@@ -96,7 +107,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             )}
           </div>
 
-
+          {isAuthenticated && (
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              style={{ padding: '0.5rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Add to Cart"
+            >
+              <ShoppingCart size={16} />
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -317,7 +317,9 @@ const ProductDetail: React.FC = () => {
           ) : (
             <div className="card" style={{ padding: '1rem', textAlign: 'center', backgroundColor: 'var(--bg-main)' }}>
               <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                Viewing as a Seller/Admin. Add to cart is restricted.
+                {!isAuthenticated
+                  ? 'Please log in to add items to your cart.'
+                  : 'Add to cart is not available for your account type.'}
               </span>
             </div>
           )}
