@@ -1,7 +1,6 @@
 import React from 'react';
-import { Product, Role } from '../types';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { Product } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 
 
@@ -10,8 +9,6 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart } = useCart();
-  const { role, isAuthenticated } = useAuth();
   const { language } = useLanguage();
 
   const primaryImage = product.images?.find((img) => img.isPrimary)?.imageUrl 
@@ -31,12 +28,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const hasTieredPricing = product.pricingTiers && product.pricingTiers.length > 0;
 
 
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigating to detail page when clicking button
-    if (isOutOfStock) return;
-    addToCart(product, 1);
-  };
 
   return (
     <div className="product-card">
