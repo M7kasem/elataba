@@ -2,14 +2,73 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import apiClient from '../api/client';
 import { toGovernorates } from '../api/normalizers';
 import { Role, Governorate } from '../types';
 import { UserPlus, Mail, Lock, Phone, MapPin, Briefcase } from 'lucide-react';
 
+const copy = {
+  ar: {
+    createAccount: "إنشاء حساب جديد",
+    subText: "انضم إلى سوق العتبة للجملة لشراء أو بيع المنتجات",
+    personalDetails: "البيانات الشخصية",
+    firstName: "الاسم الأول",
+    lastName: "اسم العائلة",
+    emailAddress: "البريد الإلكتروني",
+    phoneNumber: "رقم الهاتف",
+    password: "كلمة المرور",
+    passwordPlaceholder: "على الأقل 6 أحرف",
+    accountRole: "نوع الحساب",
+    buyerOption: "مشتري (مشتري جملة)",
+    sellerOption: "بائع / متجر جملة (تاجر جملة)",
+    shippingLocation: "الشحن والموقع",
+    governorate: "المحافظة",
+    city: "المدينة",
+    shippingAddress: "تفاصيل عنوان الشحن بالكامل",
+    shippingPlaceholder: "اسم الشارع بالتفصيل، اسم المحل، علامة مميزة...",
+    registerBtn: "تسجيل وإنشاء الحساب",
+    creatingAccount: "جاري إنشاء الحساب...",
+    alreadyHaveAccount: "هل لديك حساب بالفعل؟",
+    loginHere: "سجل الدخول هنا",
+    phoneWarning: "يرجى إدخال رقم هاتف صالح (10 أرقام على الأقل).",
+    passwordWarning: "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.",
+    successMsg: "تم إنشاء الحساب بنجاح!",
+    loadGovError: "فشل تحميل المحافظات المتاحة."
+  },
+  en: {
+    createAccount: "Create Account",
+    subText: "Join ElAtaba wholesale marketplace to buy or sell products",
+    personalDetails: "Personal Details",
+    firstName: "First Name",
+    lastName: "Last Name",
+    emailAddress: "Email Address",
+    phoneNumber: "Phone Number",
+    password: "Password",
+    passwordPlaceholder: "At least 6 characters",
+    accountRole: "Account Role",
+    buyerOption: "Buyer (مشتري جملة)",
+    sellerOption: "Seller / Wholesale Store (تاجر جملة)",
+    shippingLocation: "Shipping & Location",
+    governorate: "Governorate (المحافظة)",
+    city: "City (المدينة)",
+    shippingAddress: "Full Shipping Address Details",
+    shippingPlaceholder: "Detailed street name, shop name, landmark description...",
+    registerBtn: "Register and Login",
+    creatingAccount: "Creating account...",
+    alreadyHaveAccount: "Already have an account?",
+    loginHere: "Login here",
+    phoneWarning: "Please enter a valid phone number (minimum 10 digits).",
+    passwordWarning: "Password must be at least 6 characters.",
+    successMsg: "Registration successful!",
+    loadGovError: "Failed to load governorate options."
+  }
+};
+
 const Register: React.FC = () => {
   const { register } = useAuth();
   const { showToast } = useToast();
+  const { language } = useLanguage();
   const navigate = useNavigate();
 
   const [governorates, setGovernorates] = useState<Governorate[]>([]);
@@ -27,6 +86,8 @@ const Register: React.FC = () => {
   const [shippingAddress, setShippingAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const labels = copy[language as keyof typeof copy];
+
   useEffect(() => {
     const fetchGovernorates = async () => {
       try {
@@ -38,24 +99,24 @@ const Register: React.FC = () => {
         }
       } catch (err) {
         console.error('Error fetching governorates during registration:', err);
-        showToast('Failed to load governorate options.', 'error');
+        showToast(labels.loadGovError, 'error');
       } finally {
         setLoadingGovs(false);
       }
     };
     fetchGovernorates();
-  }, [showToast]);
+  }, [showToast, labels.loadGovError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Client-side validations
     if (phone.length < 10) {
-      showToast('Please enter a valid phone number (minimum 10 digits).', 'warning');
+      showToast(labels.phoneWarning, 'warning');
       return;
     }
     if (password.length < 6) {
-      showToast('Password must be at least 6 characters.', 'warning');
+      showToast(labels.passwordWarning, 'warning');
       return;
     }
 
@@ -74,7 +135,7 @@ const Register: React.FC = () => {
       };
 
       await register(payload);
-      showToast('Registration successful!', 'success');
+      showToast(labels.successMsg, 'success');
 
       if (Number(role) === Role.Seller) {
         navigate('/seller/create-store');
@@ -89,41 +150,41 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '3rem 2rem' }}>
+    <div className="main-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '3rem 2rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
       <div className="card" style={{ width: '100%', maxWidth: '650px', padding: '2.5rem', border: '1px solid var(--border-color)' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span style={{ fontSize: '3rem' }}>📝</span>
-          <h2 style={{ fontSize: '1.8rem', marginTop: '1rem', marginBottom: '0.5rem' }}>Create Account</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Join ElAtaba wholesale marketplace to buy or sell products</p>
+          <h2 style={{ fontSize: '1.8rem', marginTop: '1rem', marginBottom: '0.5rem' }}>{labels.createAccount}</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{labels.subText}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* Section: Basic Details */}
-          <h3 style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: 'var(--secondary)' }}>
-            Personal Details
+          <h3 style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: 'var(--secondary)', textAlign: language === 'ar' ? 'right' : 'left' }}>
+            {labels.personalDetails}
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label">First Name</label>
+              <label className="form-label">{labels.firstName}</label>
               <input
                 type="text"
                 className="form-control"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="John"
+                placeholder=""
                 required
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Last Name</label>
+              <label className="form-label">{labels.lastName}</label>
               <input
                 type="text"
                 className="form-control"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="Doe"
+                placeholder=""
                 required
               />
             </div>
@@ -133,7 +194,7 @@ const Register: React.FC = () => {
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Mail size={16} />
-                <span>Email Address</span>
+                <span>{labels.emailAddress}</span>
               </label>
               <input
                 type="email"
@@ -147,7 +208,7 @@ const Register: React.FC = () => {
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Phone size={16} />
-                <span>Phone Number</span>
+                <span>{labels.phoneNumber}</span>
               </label>
               <input
                 type="text"
@@ -164,14 +225,14 @@ const Register: React.FC = () => {
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Lock size={16} />
-                <span>Password</span>
+                <span>{labels.password}</span>
               </label>
               <input
                 type="password"
                 className="form-control"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                placeholder={labels.passwordPlaceholder}
                 minLength={6}
                 required
               />
@@ -181,29 +242,29 @@ const Register: React.FC = () => {
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Briefcase size={16} />
-                <span>Account Role</span>
+                <span>{labels.accountRole}</span>
               </label>
               <select
                 className="form-control"
                 value={role}
                 onChange={(e) => setRole(Number(e.target.value) as Role)}
               >
-                <option value={Role.Buyer}>Buyer (مشتري جملة)</option>
-                <option value={Role.Seller}>Seller / Wholesale Store (تاجر جملة)</option>
+                <option value={Role.Buyer}>{labels.buyerOption}</option>
+                <option value={Role.Seller}>{labels.sellerOption}</option>
               </select>
             </div>
           </div>
 
           {/* Section: Shipping Details */}
-          <h3 style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1.5rem', marginTop: '2.5rem', color: 'var(--secondary)' }}>
-            Shipping & Location
+          <h3 style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1.5rem', marginTop: '2.5rem', color: 'var(--secondary)', textAlign: language === 'ar' ? 'right' : 'left' }}>
+            {labels.shippingLocation}
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <MapPin size={16} />
-                <span>Governorate (المحافظة)</span>
+                <span>{labels.governorate}</span>
               </label>
               <select
                 className="form-control"
@@ -218,7 +279,7 @@ const Register: React.FC = () => {
             </div>
             
             <div className="form-group">
-              <label className="form-label">City (المدينة)</label>
+              <label className="form-label">{labels.city}</label>
               <input
                 type="text"
                 className="form-control"
@@ -231,12 +292,12 @@ const Register: React.FC = () => {
           </div>
 
           <div className="form-group" style={{ marginTop: '1rem', marginBottom: '2.5rem' }}>
-            <label className="form-label">Full Shipping Address Details</label>
+            <label className="form-label">{labels.shippingAddress}</label>
             <textarea
               className="form-control"
               value={shippingAddress}
               onChange={(e) => setShippingAddress(e.target.value)}
-              placeholder="Detailed street name, shop name, landmark description..."
+              placeholder={labels.shippingPlaceholder}
               rows={2}
               required
             />
@@ -248,14 +309,14 @@ const Register: React.FC = () => {
             disabled={isSubmitting || loadingGovs}
             style={{ width: '100%', padding: '1rem' }}
           >
-            {isSubmitting ? 'Creating account...' : 'Register and Login'}
+            {isSubmitting ? labels.creatingAccount : labels.registerBtn}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '1.5rem' }}>
-          Already have an account?{' '}
+          {labels.alreadyHaveAccount}{' '}
           <Link to="/login" style={{ fontWeight: 'bold', color: 'var(--secondary-hover)' }}>
-            Login here
+            {labels.loginHere}
           </Link>
         </div>
       </div>

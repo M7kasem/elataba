@@ -1,10 +1,27 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Role } from '../types';
+
+const copy = {
+  ar: {
+    copyright: "حقوق النشر © 2026 بوابة سوق العتبة للجملة. جميع الحقوق محفوظة.",
+    builtUsing: "تم التطوير باستخدام React و Vite وخدمات خلفية C# ASP.NET Core.",
+    haveStore: "🏪 هل لديك متجر؟ اعرض منتجات الجملة الخاصة بك.",
+    becomeSeller: "كن بائعاً الآن ←"
+  },
+  en: {
+    copyright: "© 2026 ElAtaba Wholesale Marketplace. All rights reserved.",
+    builtUsing: "Built using React, Vite, and C# ASP.NET Core Backend Services.",
+    haveStore: "🏪 Have a store? List your wholesale products.",
+    becomeSeller: "Become a Seller →"
+  }
+};
 
 const Footer: React.FC = () => {
   const { role, isAuthenticated } = useAuth();
+  const { language } = useLanguage();
   const location = useLocation();
 
   // Hide global footer on dashboard routes
@@ -14,71 +31,60 @@ const Footer: React.FC = () => {
 
   // Show only when logged in as a Buyer
   const showBecomeSeller = isAuthenticated && role === Role.Buyer;
+  const labels = copy[language as keyof typeof copy];
 
   return (
     <footer style={{ 
-      padding: '2rem 4rem', 
+      padding: '1.5rem 4rem', 
       backgroundColor: 'var(--bg-footer)', 
       color: 'var(--text-light)', 
-      textAlign: 'center',
       fontSize: '0.9rem',
       borderTop: 'none',
       marginTop: 'auto',
       display: 'flex',
-      flexDirection: 'column',
-      gap: '1.5rem'
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: '1.5rem',
+      direction: language === 'ar' ? 'rtl' : 'ltr'
     }}>
+      <div style={{ textAlign: language === 'ar' ? 'right' : 'left' }}>
+        <div>{labels.copyright}</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+          {labels.builtUsing}
+        </div>
+      </div>
+
       {showBecomeSeller && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(230, 81, 0, 0.08) 0%, rgba(245, 124, 0, 0.08) 100%)',
-          border: '1px dashed var(--secondary-color)',
-          borderRadius: '12px',
-          padding: '1.25rem 2rem',
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
-          flexWrap: 'wrap',
           gap: '1rem',
-          textAlign: 'left',
-          maxWidth: '1200px',
-          margin: '0 auto 0.5rem auto',
-          width: '100%'
+          flexWrap: 'wrap',
+          textAlign: language === 'ar' ? 'right' : 'left'
         }}>
-          <div>
-            <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--secondary-color)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              🏪 Have a store!! Become a seller
-            </h4>
-            <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              List your wholesale products and reach buyers across the nation.
-            </p>
-          </div>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            {labels.haveStore}
+          </span>
           <Link 
             to="/login?role=seller" 
             state={{ loginAsSeller: true }}
-            className="btn btn-outline"
+            className="btn btn-sm btn-outline"
             style={{ 
               textDecoration: 'none', 
-              padding: '0.5rem 1rem', 
-              fontSize: '0.85rem',
+              padding: '0.35rem 0.75rem', 
+              fontSize: '0.8rem',
               fontWeight: '600',
               borderColor: 'var(--secondary-color)',
               color: 'var(--secondary-color)'
             }}
           >
-            Become a Seller &rarr;
+            {labels.becomeSeller}
           </Link>
         </div>
       )}
-      
-      <div>
-        <div>&copy; {new Date().getFullYear()} ElAtaba Wholesale Marketplace. All rights reserved.</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-          Built using React, Vite, and C# ASP.NET Core Backend Services.
-        </div>
-      </div>
     </footer>
   );
 };
 
 export default Footer;
-

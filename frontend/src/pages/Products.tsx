@@ -69,7 +69,13 @@ const Products: React.FC = () => {
       setLoading(true);
       try {
         const [prodResponse, catResponse, govResponse] = await Promise.all([
-          apiClient.get('/api/Product'),
+          apiClient.get('/api/Product', {
+            params: {
+              search: searchQuery || undefined,
+              categoryId: selectedCategory !== 'all' ? selectedCategory : undefined,
+              pageSize: 50
+            }
+          }),
           apiClient.get('/api/Category/GetAll'),
           apiClient.get('/api/Governorate')
         ]);
@@ -93,7 +99,7 @@ const Products: React.FC = () => {
     };
     
     fetchData();
-  }, []);
+  }, [searchQuery, selectedCategory]);
 
   const handleCategorySelect = (catId: string) => {
     if (catId === 'all') {

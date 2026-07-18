@@ -185,6 +185,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('elAtaba_email');
     localStorage.removeItem('elAtaba_role');
     localStorage.removeItem('elAtaba_storeId');
+    localStorage.removeItem('elAtaba_cart_guest');
+    localStorage.removeItem('elAtaba_cart');
   };
 
   const logout = async () => {

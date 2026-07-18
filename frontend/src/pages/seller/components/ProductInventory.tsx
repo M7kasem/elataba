@@ -40,6 +40,13 @@ const copy = {
     deleteSuccess: 'تم مسح المنتج بنجاح!',
     validationError: 'يرجى إدخال سعر أكبر من صفر والكمية المتاحة من صفر أو أكثر.',
     noProducts: 'لم تقم بإضافة أي منتجات بعد. ابدأ بإضافة أول منتج لمحلك الآن!',
+    tieredPricing: 'عروض جملة',
+    tieredPricingVisual: 'خصم جملة',
+    addTier: 'اضافة شريحة اخري',
+    tierQuantityFrom: 'عدد القطع: من',
+    tierQuantityTo: 'الي',
+    tierPrice: 'السعر:',
+    tierRemove: 'حذف الشريحة'
   },
   en: {
     title: 'Product Management',
@@ -75,6 +82,13 @@ const copy = {
     deleteSuccess: 'Product deleted successfully!',
     validationError: 'Validation failed: Price must be > 0 and stock >= 0.',
     noProducts: 'No products added yet. Start by adding your first product listing!',
+    tieredPricing: 'Tiered Pricing',
+    tieredPricingVisual: 'Tier Discount',
+    addTier: 'Add another tier',
+    tierQuantityFrom: 'Quantity: From',
+    tierQuantityTo: 'To',
+    tierPrice: 'Price:',
+    tierRemove: 'Remove Tier'
   }
 };
 
@@ -108,6 +122,7 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ storeId, pro
   const [images, setImages] = useState<File[]>([]);
   const [launchOffer, setLaunchOffer] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(10);
+  const [pricingTiers, setPricingTiers] = useState<{ minQuantity: number, pricePerUnit: number }[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Reset form
@@ -120,6 +135,7 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ storeId, pro
     setImages([]);
     setLaunchOffer(false);
     setDiscountPercent(10);
+    setPricingTiers([]);
     setEditingId(null);
   };
 
@@ -132,6 +148,7 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ storeId, pro
     setPrice(prod.basePrice);
     setStock(prod.stockQuantity);
     setLaunchOffer(false);
+    setPricingTiers(prod.pricingTiers || []);
     setImages([]);
     setShowModal(true);
   };
@@ -174,6 +191,10 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ storeId, pro
       images.forEach((img) => {
         formData.append('images', img);
       });
+
+      if (pricingTiers.length > 0) {
+        formData.append('pricingTiersJson', JSON.stringify(pricingTiers));
+      }
 
       if (mode === 'add') {
         const endpoint = launchOffer ? '/api/Product/create-with-offer' : '/api/Product';
@@ -321,6 +342,7 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ storeId, pro
                   <th style={{ padding: '1rem', fontWeight: '600', textAlign: 'center' }}>{labels.price}</th>
                   <th style={{ padding: '1rem', fontWeight: '600', textAlign: 'center' }}>{labels.stock}</th>
                   <th style={{ padding: '1rem', fontWeight: '600', textAlign: 'center' }}>{labels.status}</th>
+                  <th style={{ padding: '1rem', fontWeight: '600', textAlign: 'center' }}>{labels.tieredPricingVisual}</th>
                   <th style={{ padding: '1rem', fontWeight: '600', textAlign: 'center', width: '100px' }}>{labels.actions}</th>
                 </tr>
               </thead>
@@ -393,6 +415,25 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ storeId, pro
                         }}>
                           {isOutOfStock ? labels.statusOutOfStock : labels.statusActive}
                         </span>
+                      </td>
+
+                      {/* Tiered Pricing visual */}
+                      <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+                        {prod.pricingTiers && prod.pricingTiers.length > 0 ? (
+                          <span style={{ 
+                            display: 'inline-block', 
+                            padding: '0.25rem 0.6rem', 
+                            borderRadius: '6px', 
+                            fontSize: '0.8rem', 
+                            fontWeight: '700', 
+                            backgroundColor: 'rgba(255, 193, 7, 0.15)', 
+                            color: 'var(--color-warning)' 
+                          }}>
+                            {labels.tieredPricingVisual}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
                       </td>
 
                       {/* Actions */}
@@ -609,6 +650,109 @@ export const ProductInventory: React.FC<ProductInventoryProps> = ({ storeId, pro
                   )}
                 </div>
               )}
+
+              {/* Tiered Pricing Section */}
+              <div style={{
+                padding: '1rem',
+                backgroundColor: 'var(--bg-main)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--secondary)' }}>{labels.tieredPricing}</h4>
+                
+                {(() => {
+                  const sortedTiers = [...pricingTiers].sort((a, b) => a.minQuantity - b.minQuantity);
+                  return sortedTiers.map((tier, index) => {
+                    const nextTier = sortedTiers[index + 1];
+
+                    return (
+                      <div key={index} style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '1rem',
+                        flexWrap: 'wrap',
+                        padding: '0.5rem',
+                        backgroundColor: 'rgba(0,0,0,0.02)',
+                        borderRadius: 'var(--radius-sm)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontWeight: 'bold' }}>{labels.tierQuantityFrom}</span>
+                          <input 
+                            type="number"
+                            min="2"
+                            className="form-control"
+                            value={tier.minQuantity}
+                            onChange={(e) => {
+                              const newMin = Number(e.target.value);
+                              const newTiers = pricingTiers.map(t => t === tier ? { ...t, minQuantity: newMin } : t);
+                              setPricingTiers(newTiers);
+                            }}
+                            style={{ width: '80px', padding: '0.3rem' }}
+                          />
+                          <span style={{ fontWeight: 'bold' }}>{labels.tierQuantityTo}</span>
+                          <input 
+                            type="number"
+                            min={tier.minQuantity}
+                            className="form-control"
+                            value={nextTier ? nextTier.minQuantity - 1 : stock}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              if (nextTier) {
+                                const newTiers = pricingTiers.map(t => t === nextTier ? { ...t, minQuantity: val + 1 } : t);
+                                setPricingTiers(newTiers);
+                              } else {
+                                setStock(val);
+                              }
+                            }}
+                            style={{ width: '80px', padding: '0.3rem' }}
+                          />
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontWeight: 'bold' }}>{labels.tierPrice}</span>
+                          <input 
+                            type="number"
+                            step="0.01"
+                            className="form-control"
+                            value={tier.pricePerUnit}
+                            onChange={(e) => {
+                              const newPrice = Number(e.target.value);
+                              const newTiers = pricingTiers.map(t => t === tier ? { ...t, pricePerUnit: newPrice } : t);
+                              setPricingTiers(newTiers);
+                            }}
+                            style={{ width: '100px', padding: '0.3rem' }}
+                          />
+                        </div>
+                        
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const newTiers = pricingTiers.filter(t => t !== tier);
+                            setPricingTiers(newTiers);
+                          }}
+                          style={{ background: 'none', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', marginLeft: 'auto' }}
+                          title={labels.tierRemove}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    );
+                  });
+                })()}
+
+                <button 
+                  type="button" 
+                  className="btn btn-outline btn-sm" 
+                  onClick={() => setPricingTiers([...pricingTiers, { minQuantity: 5, pricePerUnit: price }])}
+                  style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Plus size={14} />
+                  {labels.addTier}
+                </button>
+              </div>
 
               {/* Form Controls */}
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Product, CartItem } from '../types';
+import { useAuth } from './AuthContext';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -14,15 +15,33 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const getCartKey = () => {
+  const storedUserId = localStorage.getItem('elAtaba_userId');
+  return storedUserId ? `elAtaba_cart_${storedUserId}` : 'elAtaba_cart_guest';
+};
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { userId } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    const savedCart = localStorage.getItem('elAtaba_cart');
+    const key = getCartKey();
+    const savedCart = localStorage.getItem(key);
     return savedCart ? JSON.parse(savedCart) : [];
   });
+  const loadedUserIdRef = useRef<number | null | undefined>(undefined);
 
   useEffect(() => {
-    localStorage.setItem('elAtaba_cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    const key = userId ? `elAtaba_cart_${userId}` : 'elAtaba_cart_guest';
+    const savedCart = localStorage.getItem(key);
+    setCartItems(savedCart ? JSON.parse(savedCart) : []);
+    loadedUserIdRef.current = userId;
+  }, [userId]);
+
+  useEffect(() => {
+    if (loadedUserIdRef.current === userId) {
+      const key = userId ? `elAtaba_cart_${userId}` : 'elAtaba_cart_guest';
+      localStorage.setItem(key, JSON.stringify(cartItems));
+    }
+  }, [cartItems, userId]);
 
   // Pricing tier calculator: checks breakpoints and active offer price
   const getItemPrice = (product: Product, quantity: number): number => {

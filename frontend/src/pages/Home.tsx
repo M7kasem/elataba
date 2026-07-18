@@ -71,7 +71,13 @@ const Home: React.FC = () => {
       setLoading(true);
       try {
         const [prodResponse, catResponse, govResponse, dealsResponse] = await Promise.all([
-          apiClient.get('/api/Product'),
+          apiClient.get('/api/Product', {
+            params: {
+              search: searchQuery || undefined,
+              categoryId: selectedCategory !== 'all' ? selectedCategory : undefined,
+              pageSize: 50
+            }
+          }),
           apiClient.get('/api/Category/GetAll'),
           apiClient.get('/api/Governorate'),
           apiClient.get('/api/Product/best-deals?take=20') // Fetch max 20 for expanding
@@ -98,7 +104,7 @@ const Home: React.FC = () => {
     };
     
     fetchData();
-  }, []);
+  }, [searchQuery, selectedCategory]);
 
   const handleCategorySelect = (catId: string) => {
     if (catId === 'all') {
@@ -268,53 +274,86 @@ const Home: React.FC = () => {
             </div>
           )}
 
-      {/* Best Deals Section */}
-      {!loading && !searchQuery && selectedCategory === 'all' && bestDeals.length > 0 && (
-        <div style={{ 
-          padding: '3.5rem 4rem', 
-          marginBottom: '4rem', 
-          backgroundColor: 'rgba(255, 183, 3, 0.08)', 
-          borderTop: '1px solid var(--border-color)', 
-          borderBottom: '1px solid var(--border-color)' 
-        }}>
-          <h2 style={{ 
-            fontSize: '2.2rem', 
-            fontWeight: '800', 
-            marginBottom: '1.5rem', 
-            color: 'var(--secondary)',
-            borderLeft: language === 'en' ? '6px solid var(--primary)' : 'none',
-            borderRight: language === 'ar' ? '6px solid var(--primary)' : 'none',
-            padding: '0 1rem',
-            display: 'inline-block'
-          }}>
-            {labels.bestDealsTitle}
-          </h2>
-          
-          <div className="product-grid" style={{ padding: '0' }}>
-            {bestDeals.slice(0, visibleBestDeals).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+      {/* If there is a search query, display search results */}
+      {searchQuery ? (
+        filteredProducts.length > 0 ? (
+          <div>
+            <div className="product-grid" style={{ padding: '0' }}>
+              {filteredProducts.slice(0, visibleProducts).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            
+            {filteredProducts.length > visibleProducts && (
+              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <button 
+                  className="btn btn-outline"
+                  onClick={() => setVisibleProducts(prev => prev + 20)}
+                  style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '700', borderColor: 'var(--secondary)', color: 'var(--secondary)' }}
+                >
+                  {labels.showMore} &darr;
+                </button>
+              </div>
+            )}
           </div>
-          
-          {bestDeals.length > visibleBestDeals && (
-            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <button 
-                className="btn btn-primary"
-                onClick={() => setVisibleBestDeals(prev => prev + 8)}
-                style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '800' }}
-              >
-                {labels.showMore} &darr;
-              </button>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+            <h3 style={{ fontSize: '1.5rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>{labels.noProducts}</h3>
+            <p style={{ color: 'var(--text-muted)' }}>{labels.adjustFilters}</p>
+          </div>
+        )
+      ) : (
+        /* Otherwise, display normal landing sections: Best Deals & All Products link */
+        <>
+          {/* Best Deals Section */}
+          {!loading && bestDeals.length > 0 && (
+            <div style={{ 
+              padding: '3.5rem 4rem', 
+              marginBottom: '4rem', 
+              backgroundColor: 'rgba(255, 183, 3, 0.08)', 
+              borderTop: '1px solid var(--border-color)', 
+              borderBottom: '1px solid var(--border-color)' 
+            }}>
+              <h2 style={{ 
+                fontSize: '2.2rem', 
+                fontWeight: '800', 
+                marginBottom: '1.5rem', 
+                color: 'var(--secondary)',
+                borderLeft: language === 'en' ? '6px solid var(--primary)' : 'none',
+                borderRight: language === 'ar' ? '6px solid var(--primary)' : 'none',
+                padding: '0 1rem',
+                display: 'inline-block'
+              }}>
+                {labels.bestDealsTitle}
+              </h2>
+              
+              <div className="product-grid" style={{ padding: '0' }}>
+                {bestDeals.slice(0, visibleBestDeals).map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              
+              {bestDeals.length > visibleBestDeals && (
+                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => setVisibleBestDeals(prev => prev + 8)}
+                    style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '800' }}
+                  >
+                    {labels.showMore} &darr;
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
           <div style={{ textAlign: 'center', marginTop: '3rem' }}>
             <Link to="/products" className="btn btn-primary" style={{ borderRadius: 'var(--radius-pill)', padding: '0.75rem 2rem', fontWeight: '800', fontSize: '1.1rem' }}>
               {labels.allProducts} &rarr;
             </Link>
           </div>
+        </>
+      )}
         </main>
       </div>
     </div>

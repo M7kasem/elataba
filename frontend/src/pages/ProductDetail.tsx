@@ -20,6 +20,7 @@ const ProductDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string>('');
+  const [showAllTiers, setShowAllTiers] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -219,19 +220,37 @@ const ProductDetail: React.FC = () => {
           {product.pricingTiers && product.pricingTiers.length > 0 && (
             <div className="card" style={{ padding: '1rem' }}>
               <h4 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: 'var(--secondary)' }}>
-                Wholesale Tier Pricing (أسعار الجملة للكميات)
+                Wholesale Tier Pricing (عروض جملة)
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.9rem' }}>
-                <div style={{ fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Quantity Breakpoint</div>
-                <div style={{ fontWeight: 'bold', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>Price Per Unit</div>
                 
-                {product.pricingTiers.map((tier, idx) => (
-                  <React.Fragment key={idx}>
-                    <div style={{ padding: '0.25rem 0' }}>Buy {tier.minQuantity}+ units</div>
-                    <div style={{ padding: '0.25rem 0', color: 'var(--color-success)', fontWeight: 'bold' }}>${tier.pricePerUnit}</div>
-                  </React.Fragment>
-                ))}
+                {(() => {
+                  const sortedTiers = [...product.pricingTiers].sort((a, b) => a.minQuantity - b.minQuantity);
+                  const tiersToDisplay = showAllTiers ? sortedTiers : sortedTiers.slice(0, 3);
+                  
+                  return tiersToDisplay.map((tier, idx) => {
+                    const originalIndex = sortedTiers.findIndex(t => t === tier);
+                    const nextTier = sortedTiers[originalIndex + 1];
+                    const toDisplay = nextTier ? String(nextTier.minQuantity - 1) : String(Math.max(tier.minQuantity, product.stockQuantity));
+                    
+                    return (
+                      <React.Fragment key={idx}>
+                        <div style={{ padding: '0.25rem 0' }}>عدد القطع: من ({tier.minQuantity}) الي ({toDisplay})</div>
+                        <div style={{ padding: '0.25rem 0', color: 'var(--color-success)', fontWeight: 'bold' }}>السعر: (${tier.pricePerUnit})</div>
+                      </React.Fragment>
+                    );
+                  });
+                })()}
               </div>
+              {product.pricingTiers.length > 3 && !showAllTiers && (
+                <button 
+                  onClick={() => setShowAllTiers(true)}
+                  className="btn btn-outline btn-sm" 
+                  style={{ marginTop: '0.5rem', width: '100%' }}
+                >
+                  قراءة المزيد
+                </button>
+              )}
             </div>
           )}
 

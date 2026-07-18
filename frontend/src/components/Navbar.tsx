@@ -76,7 +76,21 @@ const Navbar: React.FC = () => {
       </Link>
 
       <form onSubmit={handleSearchSubmit} className="navbar-search" style={{ position: 'relative' }}>
-        <Search size={18} color="var(--text-muted)" />
+        <button 
+          type="submit" 
+          style={{ 
+            background: 'none', 
+            border: 'none', 
+            padding: 0, 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+          }}
+          title="Search"
+        >
+          <Search size={18} color="var(--text-muted)" />
+        </button>
         <input 
           value={searchQuery} 
           onChange={(event) => setSearchQuery(event.target.value)} 

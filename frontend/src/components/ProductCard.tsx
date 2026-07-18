@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Product, Role } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { ShoppingCart } from 'lucide-react';
 
 interface ProductCardProps {
@@ -12,6 +13,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { role, isAuthenticated } = useAuth();
+  const { language } = useLanguage();
 
   const primaryImage = product.images?.find((img) => img.isPrimary)?.imageUrl 
     || product.images?.[0]?.imageUrl 
@@ -27,6 +29,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const hasDiscount = product.hasActiveOffer && product.discountPercentage && product.discountPercentage > 0;
   const isOutOfStock = product.stockQuantity <= 0;
+  const hasTieredPricing = product.pricingTiers && product.pricingTiers.length > 0;
 
   // Buyers and visitors can see Add to Cart; sellers and admins see a disabled or hidden state
   const canAddToCart = role === Role.Buyer || !isAuthenticated;
@@ -43,6 +46,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {hasDiscount && (
           <span className="discount-badge">
             -{product.discountPercentage}% OFF
+          </span>
+        )}
+        {hasTieredPricing && (
+          <span style={{
+            position: 'absolute',
+            top: hasDiscount ? '2.5rem' : '0.75rem',
+            left: '0.75rem',
+            backgroundColor: 'var(--color-warning)',
+            color: '#fff',
+            padding: '0.25rem 0.5rem',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            zIndex: 2,
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            {language === 'ar' ? 'يوجد عروض جملة' : 'Wholesale Offers'}
           </span>
         )}
         {isOutOfStock && (
