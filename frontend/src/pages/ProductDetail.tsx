@@ -91,7 +91,7 @@ const ProductDetail: React.FC = () => {
   const totalPrice = unitPrice * quantity;
 
   // Roles restriction logic
-  const canAddToCart = role === Role.Buyer || !isAuthenticated;
+  const canAddToCart = role === Role.Buyer && isAuthenticated;
 
   const handleAddToCart = () => {
     if (quantity > product.stockQuantity) {

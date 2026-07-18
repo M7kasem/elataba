@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Product, CartItem } from '../types';
 import { useAuth } from './AuthContext';
+import { Product, CartItem } from '../types';
+
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -15,33 +16,44 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const getCartKey = () => {
-  const storedUserId = localStorage.getItem('elAtaba_userId');
-  return storedUserId ? `elAtaba_cart_${storedUserId}` : 'elAtaba_cart_guest';
+const getCartKey = (uid: string | null) => {
+  return uid ? `elAtaba_cart_${uid}` : null;
 };
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { userId } = useAuth();
+  const cartKey = getCartKey(userId);
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    const key = getCartKey();
-    const savedCart = localStorage.getItem(key);
+    if (!cartKey) return [];
+    const savedCart = localStorage.getItem(cartKey);
     return savedCart ? JSON.parse(savedCart) : [];
   });
-  const loadedUserIdRef = useRef<number | null | undefined>(undefined);
+  const loadedUserIdRef = useRef<string | null | undefined>(undefined);
 
+  // Load cart when userId changes
   useEffect(() => {
-    const key = userId ? `elAtaba_cart_${userId}` : 'elAtaba_cart_guest';
+    if (!userId) {
+      setCartItems([]);
+      loadedUserIdRef.current = null;
+      return;
+    }
+    const key = getCartKey(userId);
+    if (!key) return;
     const savedCart = localStorage.getItem(key);
     setCartItems(savedCart ? JSON.parse(savedCart) : []);
     loadedUserIdRef.current = userId;
   }, [userId]);
 
+  // Persist cart only for logged-in users
   useEffect(() => {
+    if (!userId) return;
+    const key = getCartKey(userId);
+    if (!key) return;
     if (loadedUserIdRef.current === userId) {
-      const key = userId ? `elAtaba_cart_${userId}` : 'elAtaba_cart_guest';
       localStorage.setItem(key, JSON.stringify(cartItems));
     }
   }, [cartItems, userId]);
+
 
   // Pricing tier calculator: checks breakpoints and active offer price
   const getItemPrice = (product: Product, quantity: number): number => {
@@ -59,6 +71,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addToCart = (product: Product, quantity: number) => {
+    if (!userId) {
+      // Visitor cannot add to cart; optionally show a warning
+      console.warn('Add to cart blocked for visitor.');
+      return;
+    }
     setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex((item) => item.product.id === product.id);
 
